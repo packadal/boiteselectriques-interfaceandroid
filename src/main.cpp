@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
         QObject::connect(pisteControllers[i]->findChild<QObject*>("SoloButton"), SIGNAL(ifclicked(int,bool)),
                          &monapp, SLOT(solo(int,bool)));
     }
-    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("New_treshold"), SIGNAL(tresholdChanged(int)),
-                     &monapp, SLOT(updatetreshold(int)));
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("New_threshold"), SIGNAL(thresholdChanged(int)),
+                     &monapp, SLOT(updatethreshold(int)));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Play"), SIGNAL(ifclicked()),
                      &monapp, SLOT(play()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Stop"), SIGNAL(ifclicked()),
@@ -99,8 +99,8 @@ int main(int argc, char *argv[])
                      pisteControllers[7], SLOT(setUnchecked()));
 
 
-    QObject::connect(&monapp, SIGNAL(treshold_receive(QVariant)),
-                     engine.rootObjects().first()->findChild<QObject*>("Treshold"), SLOT(aff_treshold(QVariant)));
+    QObject::connect(&monapp, SIGNAL(threshold_receive(QVariant)),
+                     engine.rootObjects().first()->findChild<QObject*>("threshold"), SLOT(aff_threshold(QVariant)));
     QObject::connect(&monapp, SIGNAL(update_beat(QVariant)),
                      engine.rootObjects().first()->findChild<QObject*>("Beat"), SLOT(aff_beat(QVariant)));
     //QObject::connect(&monapp, SIGNAL(update_titre(QVariant)),

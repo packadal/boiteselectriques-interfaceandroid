@@ -237,25 +237,25 @@ ApplicationWindow {
 
                 //Sensibilité
                 Rectangle {
-                    id: treshold
-                    objectName: "Treshold"
+                    id: threshold
+                    objectName: "threshold"
                     color:"transparent"
                     width:200;height: 60;x: 850
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
-                        id: treshold_value
+                        id: threshold_value
                         text: qsTr("Sensibilité :")
                         color: "white"
                     }
-                    function aff_treshold(sensor){
+                    function aff_threshold(sensor){
                         var aff_t = sensor;
-                        treshold_value.text = qsTr("Sensibilité: " + aff_t);
-                        new_treshold.value = aff_t;
+                        threshold_value.text = qsTr("Sensibilité: " + aff_t);
+                        new_threshold.value = aff_t;
                     }
                     MouseArea{
                         anchors.fill:parent
-                        onClicked: {item_treshold.visible=true}
+                        onClicked: {item_threshold.visible=true}
                     }
                 }
 
@@ -306,7 +306,7 @@ ApplicationWindow {
         //Sensibilité
         Item {
             width: 1280; height: 750
-            id: item_treshold
+            id: item_threshold
             visible: false
 
             //Texte
@@ -335,11 +335,11 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     focus: true
-                    id: new_treshold
+                    id: new_threshold
                     stepSize: 1
                     tickmarksEnabled: true
-                    signal tresholdChanged (int val)
-                    objectName: "New_treshold"
+                    signal thresholdChanged (int val)
+                    objectName: "New_threshold"
                     orientation: Qt.Horizontal
                     smooth: true
                     implicitHeight: 50
@@ -347,8 +347,8 @@ ApplicationWindow {
                     minimumValue: 0
                     maximumValue: 99
                     value: 0
-                    style: touchStyle_treshold
-                    onValueChanged: new_treshold.tresholdChanged(new_treshold.value)
+                    style: touchStyle_threshold
+                    onValueChanged: new_threshold.thresholdChanged(new_threshold.value)
                 }
             }
 
@@ -364,7 +364,7 @@ ApplicationWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: new_treshold.value
+                    text: new_threshold.value
                     color:"white"
                 }
             }
@@ -379,7 +379,7 @@ ApplicationWindow {
                 anchors.topMargin: 5
                 Button {
                     checkable: true
-                    onClicked: {item_treshold.visible = false; treshold_value.text = qsTr("Sensibilité: " + new_treshold.value);}
+                    onClicked: {item_threshold.visible = false; threshold_value.text = qsTr("Sensibilité: " + new_threshold.value);}
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Valider")
@@ -872,9 +872,9 @@ ApplicationWindow {
             }
         }
     }
-    //style treshold volume
+    //style threshold volume
     Component {
-        id: touchStyle_treshold
+        id: touchStyle_threshold
         SliderStyle {
             handle: Rectangle {
                 border.color: "black"

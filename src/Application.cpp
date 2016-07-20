@@ -18,19 +18,19 @@ Application::Application(QObject *parent) :
     oscReceiver.addHandler("/box/play",
                             std::bind(&Application::handle__box_play,
                             this, std::placeholders::_1));
-    oscReceiver.addHandler("/box/titre",
+    oscReceiver.addHandler("/box/title",
                             std::bind(&Application::handle__box_titre,
                             this, std::placeholders::_1));
-    oscReceiver.addHandler("/box/liste",
+    oscReceiver.addHandler("/box/songs_list",
                             std::bind(&Application::handle__box_liste,
                             this, std::placeholders::_1));
-    oscReceiver.addHandler("/box/NumbTrack",
+    oscReceiver.addHandler("/box/tracks_count",
                             std::bind(&Application::handle__numb_track,
                             this, std::placeholders::_1));
-    oscReceiver.addHandler("/box/ready_to_go",
+    oscReceiver.addHandler("/box/ready",
                             std::bind(&Application::handle__ready_to_go,
                             this, std::placeholders::_1));
-    oscReceiver.addHandler("/box/listeTrack",
+    oscReceiver.addHandler("/box/tracks_list",
                             std::bind(&Application::handle__listeTrack,
                             this, std::placeholders::_1));
 
@@ -41,9 +41,9 @@ Application::Application(QObject *parent) :
 
 void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args)
 {
-    osc::int32 treshold_in;
-    args >> treshold_in;
-    send_treshold(QString::number(treshold_in));
+    osc::int32 threshold_in;
+    args >> threshold_in;
+    send_threshold(QString::number(threshold_in));
 }
 
 void Application::handle__listeTrack(osc::ReceivedMessageArgumentStream args)

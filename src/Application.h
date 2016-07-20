@@ -28,8 +28,8 @@ class Application : public QObject
         void handle__ready_to_go(osc::ReceivedMessageArgumentStream args);
 
     public slots:
-        void updatetreshold(int tresh)
-        { sender.send(osc::MessageGenerator()("/box/update_treshold", tresh));}
+        void updatethreshold(int tresh)
+        { sender.send(osc::MessageGenerator()("/box/update_threshold", tresh));}
 
         void buton(int chan)
         { sender.send(osc::MessageGenerator()("/box/enable", chan));}
@@ -58,14 +58,17 @@ class Application : public QObject
         void reset()
         { sender.send(osc::MessageGenerator()("/box/reset", true)); isPlaying= false; currentBeat= 0;}
 
+        void resetThreshold()
+        { sender.send(osc::MessageGenerator()("/box/reset_threshold", true)); }
+
         void refreshsong()
-        { sender.send(osc::MessageGenerator()("/box/refreshsong", true)); }
+        { sender.send(osc::MessageGenerator()("/box/refresh_song", true)); }
 
         void selectsong(QString song)
         {
             QByteArray so = song.toLatin1();
             const char *c_song = so.data();
-            sender.send(osc::MessageGenerator()("/box/selectsong", c_song));
+            sender.send(osc::MessageGenerator()("/box/select_song", c_song));
         }
 
         void active_box(int chan)
@@ -161,8 +164,8 @@ class Application : public QObject
            }
         }
 
-        void send_treshold(QVariant treshold_in){
-            emit treshold_receive(treshold_in);
+        void send_threshold(QVariant threshold_in){
+            emit threshold_receive(threshold_in);
         }
         void send_titre(QVariant titre){
             emit update_titre(titre);
@@ -218,7 +221,7 @@ class Application : public QObject
         void uncheck5();
         void uncheck6();
         void uncheck7();
-        void treshold_receive(QVariant);
+        void threshold_receive(QVariant);
         void update_beat(QVariant);
         void update_titre(QVariant);
         void update_liste(QVariant);
