@@ -5,34 +5,34 @@ Application::Application(QObject *parent) :
 {
     oscReceiver.addHandler("/box/sensor",
                             std::bind(&Application::handle__box_sensor,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/enable_out",
                             std::bind(&Application::handle__box_enable_out,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/enable_sync",
                             std::bind(&Application::handle__box_enable_sync,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/beat",
                             std::bind(&Application::handle__box_beat,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/play",
                             std::bind(&Application::handle__box_play,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/title",
                             std::bind(&Application::handle__box_titre,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/songs_list",
                             std::bind(&Application::handle__box_liste,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/tracks_count",
                             std::bind(&Application::handle__numb_track,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/ready",
                             std::bind(&Application::handle__ready_to_go,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
     oscReceiver.addHandler("/box/tracks_list",
                             std::bind(&Application::handle__listeTrack,
-                            this, std::placeholders::_1));
+                                      this, std::placeholders::_1));
 
     oscReceiver.run();
 
@@ -172,4 +172,8 @@ void Application::sync_box(int val){
         else
             uncheck_box(i);
     }
+}
+QString Application::song() const
+{
+    return m_song;
 }

@@ -27,7 +27,10 @@ class Application : public QObject
         void handle__listeTrack(osc::ReceivedMessageArgumentStream args);
         void handle__ready_to_go(osc::ReceivedMessageArgumentStream args);
 
-    public slots:
+        QString song() const;
+        void setSong(const QString &song);
+
+public slots:
         void updatethreshold(int tresh)
         { sender.send(osc::MessageGenerator()("/box/update_threshold", tresh));}
 
@@ -66,10 +69,17 @@ class Application : public QObject
 
         void selectsong(QString song)
         {
+            m_song = song;
             QByteArray so = song.toLatin1();
             const char *c_song = so.data();
             sender.send(osc::MessageGenerator()("/box/select_song", c_song));
         }
+
+        void reloadsong()
+        { selectsong(m_song);}
+
+        void sync()
+        { sender.send(osc::MessageGenerator()("/box/sync", true)); }
 
         void active_box(int chan)
         {
@@ -195,6 +205,8 @@ class Application : public QObject
         void playBeats(int tempo);
         void decimal2binaireInBool(int val, bool res[], int taille);
         void sync_box(int val);
+
+        QString m_song{""};
 
     signals:
         void channel0();

@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>images/logo_80.png</file>
         <file>PisteController.qml</file>
+        <file>images/Reload_32.png</file>
     </qresource>
 </RCC>

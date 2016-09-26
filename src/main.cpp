@@ -38,7 +38,9 @@ int main(int argc, char *argv[])
                      &monapp, SLOT(mastervolume(int)));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reset"), SIGNAL(ifclicked()),
                      &monapp, SLOT(reset()));
-    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Refresh"), SIGNAL(ifclicked()),
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reload"), SIGNAL(ifclicked()),
+                     &monapp, SLOT(reloadsong()));
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("About"), SIGNAL(ifclicked()),
                      &monapp, SLOT(refreshsong()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Select_song"), SIGNAL(ifselect(QString)),
                      &monapp, SLOT(selectsong(QString)));

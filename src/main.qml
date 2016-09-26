@@ -3,7 +3,7 @@ import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.1
 import QtQuick.Controls.Styles 1.2
 import QtQuick.Dialogs 1.2
-import QtQuick.Window 2.0
+import QtQuick.Window 2.2
 
 ApplicationWindow {
 	visible: true
@@ -126,14 +126,14 @@ ApplicationWindow {
 
     /************************************************/
     MessageDialog {
-        id: refreshsong
+        id: about
         signal ifclicked ()
-        objectName: "Refresh"
+        objectName: "About"
         title: "A propos"
         text: "Copyright Rock & Chanson 2015\nVersion: b3.0"
         Component.onCompleted: visible = true
         onAccepted: {
-            refreshsong.ifclicked();
+            about.ifclicked();
             select_titre.visible=true;
             select_titre.activeFocusOnPress=true;
         }
@@ -256,6 +256,26 @@ ApplicationWindow {
                     MouseArea{
                         anchors.fill:parent
                         onClicked: {item_threshold.visible=true}
+                    }
+                }
+
+                //Play
+                Rectangle{
+                    width:40;height: 50;x: 425; y: 5
+                    color: "transparent"
+                    Button{
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        id: reload
+                        signal ifclicked ()
+                        objectName: "Reload"
+                        iconSource: "qrc:///images/Reload_32.png"
+                        width: 40
+                        height: 40
+                        checkable: false
+                        onClicked: reload.ifclicked() //play.ifclicked()
+                        style: style_reload
+                        onPressedChanged: reload.ifclicked()
                     }
                 }
 
@@ -942,6 +962,17 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                 }
+             }
+         }
+    }
+    Component {
+        id: style_reload
+        ButtonStyle{
+            background:  Rectangle {
+                radius: 3
+                border.color: "black"
+                border.width: 2
+                color: control.pressed ? "darkgray" : "black"
              }
          }
     }
