@@ -1,6 +1,11 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+/**
+ * @file Application.h
+ * @brief Application interface
+ */
+
 #include <chrono>
 #include <thread>
 #include <QTime>
@@ -10,203 +15,269 @@
 #include "osc/oscsender.h"
 #include "osc/oscmessagegenerator.h"
 
-class Application : public QObject
-{
-		Q_OBJECT
+/**
+ * @brief The Application class
+ *
+ * Main program
+ */
+class Application : public QObject{
+    Q_OBJECT
 
-	public:
+    public:
         explicit Application(QObject *parent = 0);
-        void handle__box_sensor(osc::ReceivedMessageArgumentStream args);
-        void handle__box_enable_out(osc::ReceivedMessageArgumentStream args);
-        void handle__box_enable_sync(osc::ReceivedMessageArgumentStream args);
-        void handle__box_beat(osc::ReceivedMessageArgumentStream args);
-        void handle__box_play(osc::ReceivedMessageArgumentStream args);
-        void handle__box_liste(osc::ReceivedMessageArgumentStream args);
-        void handle__box_titre(osc::ReceivedMessageArgumentStream args);
-        void handle__numb_track(osc::ReceivedMessageArgumentStream args);
-        void handle__listeTrack(osc::ReceivedMessageArgumentStream args);
-        void handle__ready_to_go(osc::ReceivedMessageArgumentStream args);
 
+        /**
+         * @brief Song's title getter
+         * @return Name of the song being played
+         */
         QString song() const;
+        /**
+         * @brief Change the actual song
+         * @param song New song's name
+         */
         void setSong(const QString &song);
 
+
+        /*******************
+        * EVENTS HANDLING *
+        *******************/
+
+        /**
+         * @brief sensor event handling
+         * @param args New threshold value
+         */
+        void handle__box_sensor(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief enable_out event handling
+         * @param args Triggered box's id
+         */
+        void handle__box_enableOut(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief enable_sync event handling
+         * @param args The list of the enabled tracks
+         *
+         * The list is under the form of a binary number indicating
+         * the activated tracks.
+         * For example, for an 8-tracks song with its 2nd, 4th, 5th and 8th
+         * tracks activated, the number is 10011010.
+         */
+        void handle__box_enableSync(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief beat event handling
+         * @param args Server's current beat count value
+         */
+        void handle__box_beat(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief play event handling
+         * @param args Song's tempo
+         */
+        void handle__box_play(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief songs_list event handling
+         * @param args Songs' list
+         *
+         * The list is the concatenation of the songs' filenames,
+         * separated by the character |
+         */
+        void handle__box_songsList(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief title event handling
+         * @param args Song's title
+         */
+        void handle__box_title(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief tracks_count event handling
+         * @param args Song's tracks count
+         */
+        void handle__box_tracksCount(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief tracks_list event handling
+         * @param args Song's list of tracks
+         *
+         * The list is the concatenation of the tracks' names,
+         * separated by the character |
+         */
+        void handle__box_tracksList(osc::ReceivedMessageArgumentStream args);
+        /**
+         * @brief ready event handling
+         * @param args Loading state (ready or not)
+         */
+        void handle__box_ready(osc::ReceivedMessageArgumentStream args);
+
 public slots:
-        void updatethreshold(int tresh)
-        { sender.send(osc::MessageGenerator()("/box/update_threshold", tresh));}
 
-        void buton(int chan)
-        { sender.send(osc::MessageGenerator()("/box/enable", chan));}
+        /*******************
+        * SERVER'S CONTROL *
+        *******************/
 
-        void volume(int vol,int chan)
-        { sender.send(osc::MessageGenerator()("/box/volume", chan, vol)); }
+        /**
+         * @brief Update the server's threshold value
+         * @param thresh New threshold value
+         *
+         * Send to the server the new threshold value
+         */
+        void updateThreshold(int thresh);
+        /**
+         * @brief Toggle a track on the server
+         * @param chan Track id (number)
+         *
+         * Inform the server of a track's status toggling via the client
+         */
+        void button(int chan);
+        /**
+         * @brief Change a server track's volume
+         * @param vol New volume
+         * @param chan Track id (number)
+         *
+         * Send to the server the new volume of a track
+         */
+        void volume(int vol,int chan);
+        /**
+         * @brief Change a server track's pan
+         * @param vol New pan
+         * @param chan Track id (number)
+         *
+         * Send to the server the new pan of a track
+         */
+        void pan(int vol,int chan);
+        /**
+         * @brief Mute/Unmute a server's track
+         * @param chan Track id (number)
+         * @param state New mute state (mute = true, unmute = false)
+         *
+         * Send to the server the new mute state of a track
+         */
+        void mute(int chan,bool state);
+        /**
+         * @brief Solo/Unsolo a server's track
+         * @param chan Track id (number)
+         * @param state New solo state (solo=true, unsolo=false)
+         *
+         * Send to the server the new solo state of a track
+         */
+        void solo(int chan,bool state);
+        /**
+         * @brief Start the song
+         *
+         * Ask the server to play the current song
+         */
+        void play();
+        /**
+         * @brief Stop the song
+         *
+         * Ask the server to stop the current song
+         */
+        void stop();
+        /**
+         * @brief Update the server's master volume
+         * @param vol New volume
+         *
+         * Send to the server the new master volume
+         */
+        void masterVolume(int vol);
+        /**
+         * @brief Reset the current song's settings on the server
+         *
+         * Send a reset order to the server
+         */
+        void reset();
+        /**
+         * @brief Reset the server's threshold
+         */
+        void resetThreshold();
+        /**
+         * @brief Refresh the client songs' list
+         *
+         * Ask the songs' list to the server
+         */
+        void refreshSong();
+        /**
+         * @brief Change the current server's song
+         * @param song New song's name
+         *
+         * Ask the server to change the current song
+         */
+        void selectSong(QString song);
+        /**
+         * @brief Reload the current server's song
+         */
+        void reloadSong();
+        /**
+         * @brief Synchronize the client's informations with the server's
+         */
+        void sync();
 
-        void pan(int vol,int chan)
-        { sender.send(osc::MessageGenerator()("/box/pan", chan, vol)); }
 
-        void mute(int chan,bool etat)
-        { sender.send(osc::MessageGenerator()("/box/mute", chan, etat)); }
+        /******************
+        * CLIENT'S UPDATE *
+        *******************/
 
-        void solo(int chan,bool etat)
-        { sender.send(osc::MessageGenerator()("/box/solo", chan, etat)); }
-
-        void play()
-        { sender.send(osc::MessageGenerator()("/box/play", true)); }
-
-        void stop()
-        { sender.send(osc::MessageGenerator()("/box/stop", true)); isPlaying= false; currentBeat= 0;}
-
-        void mastervolume(int vol)
-        { sender.send(osc::MessageGenerator()("/box/master", vol)); }
-
-        void reset()
-        { sender.send(osc::MessageGenerator()("/box/reset", true)); isPlaying= false; currentBeat= 0;}
-
-        void resetThreshold()
-        { sender.send(osc::MessageGenerator()("/box/reset_threshold", true)); }
-
-        void refreshsong()
-        { sender.send(osc::MessageGenerator()("/box/refresh_song", true)); }
-
-        void selectsong(QString song)
-        {
-            m_song = song;
-            QByteArray so = song.toLatin1();
-            const char *c_song = so.data();
-            sender.send(osc::MessageGenerator()("/box/select_song", c_song));
-        }
-
-        void reloadsong()
-        { selectsong(m_song);}
-
-        void sync()
-        { sender.send(osc::MessageGenerator()("/box/sync", true)); }
-
-        void active_box(int chan)
-        {
-            switch(chan)
-            {
-            case 0:
-               emit channel0();
-            break;
-            case 1:
-               emit channel1();
-            break;
-            case 2:
-               emit channel2();
-            break;
-            case 3:
-               emit channel3();
-            break;
-            case 4:
-               emit channel4();
-            break;
-            case 5:
-               emit channel5();
-            break;
-            case 6:
-               emit channel6();
-            break;
-            case 7:
-               emit channel7();
-            break;
-           }
-        }
-
-        void check_box(int chan)
-        {
-            switch(chan)
-            {
-            case 0:
-               emit check0();
-            break;
-            case 1:
-               emit check1();
-            break;
-            case 2:
-               emit check2();
-            break;
-            case 3:
-               emit check3();
-            break;
-            case 4:
-               emit check4();
-            break;
-            case 5:
-               emit check5();
-            break;
-            case 6:
-               emit check6();
-            break;
-            case 7:
-               emit check7();
-            break;
-           }
-        }
-
-        void uncheck_box(int chan)
-        {
-            switch(chan)
-            {
-            case 0:
-               emit uncheck0();
-            break;
-            case 1:
-               emit uncheck1();
-            break;
-            case 2:
-               emit uncheck2();
-            break;
-            case 3:
-               emit uncheck3();
-            break;
-            case 4:
-               emit uncheck4();
-            break;
-            case 5:
-               emit uncheck5();
-            break;
-            case 6:
-               emit uncheck6();
-            break;
-            case 7:
-               emit uncheck7();
-            break;
-           }
-        }
-
-        void send_threshold(QVariant threshold_in){
-            emit threshold_receive(threshold_in);
-        }
-        void send_titre(QVariant titre){
-            emit update_titre(titre);
-        }
-        void send_liste(QVariant liste){
-            emit update_liste(liste);
-        }
-        void send_liste_track(QVariant listetrack){
-            emit update_liste_track(listetrack);
-        }
-        void numb_track(QVariant totaltrack){
-            emit update_totaltrack(totaltrack);
-        }
-        void ready_to_go(bool go){
-            emit update_ready(go);
-        }
+        /**
+         * @brief Toggle a client's track
+         * @param chan Track number
+         */
+        void activeBox(int chan);
+        /**
+         * @brief Activate a client's track
+         * @param chan Track number
+         */
+        void checkBox(int chan);
+        /**
+         * @brief Deactivate a client's track
+         * @param chan Track number
+         */
+        void uncheckBox(int chan);
+        /**
+         * @brief Update the client's threshold
+         * @param threshold New threshold
+         */
+        void sendThreshold(QVariant thresholdIn);
+        /**
+         * @brief Update the client's current song
+         * @param title New title
+         */
+        void sendTitle(QVariant title);
+        /**
+         * @brief Update the client's songs' list
+         * @param list List of songs
+         *
+         * The list is the concatenation of the songs' filenames,
+         * separated by the character |
+         */
+        void sendList(QVariant list);
+        /**
+         * @brief Update the client's current song's list of tracks
+         * @param trackList New list of tracks
+         *
+         * The list is the concatenation of the tracks' names,
+         * separated by the character |
+         */
+        void sendTracksList(QVariant trackList);
+        /**
+         * @brief Update the count of the current server's song's tracks
+         * @param totalTrack
+         */
+        void tracksCount(QVariant totalTrack);
+        /**
+         * @brief Signals that the current song is loaded
+         * @param go New ready state
+         */
+        void ready(bool go);
 
     private:
-        OscSender sender{"192.170.0.1", 9988};
-        OscReceiver oscReceiver{9989};
+        OscSender m_sender{"192.170.0.1", 9988};
+        OscReceiver m_oscReceiver{9989};
 
-        bool isPlaying{false};
-        int currentBeat;
-        QTime beatsTimer{};
+        bool m_isPlaying{false};
+        int m_currentBeat;
+        QTime m_beatsTimer{};
+
+        QString m_song{""};
 
         void nextBeat(int beat= -1);
         void playBeats(int tempo);
-        void decimal2binaireInBool(int val, bool res[], int taille);
-        void sync_box(int val);
-
-        QString m_song{""};
+        void decimal2BinaryInBool(int val, bool res[], int size);
+        void syncBox(int val);
 
     signals:
         void channel0();
@@ -233,13 +304,13 @@ public slots:
         void uncheck5();
         void uncheck6();
         void uncheck7();
-        void threshold_receive(QVariant);
-        void update_beat(QVariant);
-        void update_titre(QVariant);
-        void update_liste(QVariant);
-        void update_liste_track(QVariant);
-        void update_totaltrack(QVariant);
-        void update_ready(bool);
+        void thresholdReceive(QVariant);
+        void updateBeat(QVariant);
+        void updateTitle(QVariant);
+        void updateList(QVariant);
+        void updateTrackList(QVariant);
+        void updateTotalTrack(QVariant);
+        void updateReady(bool);
 };
 
 #endif // APPLICATION_H

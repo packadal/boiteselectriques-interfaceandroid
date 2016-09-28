@@ -603,15 +603,19 @@ ApplicationWindow {
                     width: 100; height: 70
                     color: "transparent"
                     Button{
+                        id: reset
+
+                        signal ifclicked()
+                        signal click()
+
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
-                        id: reset
-                        signal ifclicked ()
+
                         objectName: "Reset"
                         width: 100
                         height: 60
                         checkable: true
-                        onClicked: doReset()
+                        onClicked: click()//doReset()
                         style: style_reset
                     }
                 }

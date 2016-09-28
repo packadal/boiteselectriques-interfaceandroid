@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     //De la tablette vers le udoo
     for (int i=0;i<8;i++){
         QObject::connect(pisteControllers[i]->findChild<QObject*>("MainButton"), SIGNAL(ifclicked(int)),
-                         &monapp, SLOT(buton(int)));
+                         &monapp, SLOT(button(int)));
         QObject::connect(pisteControllers[i]->findChild<QObject*>("VolumeSlider"), SIGNAL(volumeChanged(int,int)),
                          &monapp, SLOT(volume(int,int)));
         QObject::connect(pisteControllers[i]->findChild<QObject*>("PanSlider"), SIGNAL(panChanged(int,int)),
@@ -29,21 +29,25 @@ int main(int argc, char *argv[])
                          &monapp, SLOT(solo(int,bool)));
     }
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("New_threshold"), SIGNAL(thresholdChanged(int)),
-                     &monapp, SLOT(updatethreshold(int)));
+                     &monapp, SLOT(updateThreshold(int)));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Play"), SIGNAL(ifclicked()),
                      &monapp, SLOT(play()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Stop"), SIGNAL(ifclicked()),
                      &monapp, SLOT(stop()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("VolumeMasterSlider"), SIGNAL(volumeChanged(int)),
-                     &monapp, SLOT(mastervolume(int)));
-    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reset"), SIGNAL(ifclicked()),
+                     &monapp, SLOT(masterVolume(int)));
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reset"), SIGNAL(click()),
                      &monapp, SLOT(reset()));
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reset"), SIGNAL(click()),
+                     &monapp, SLOT(resetThreshold()));
+    QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reset"), SIGNAL(click()),
+                     &monapp, SLOT(refreshSong())   );
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Reload"), SIGNAL(ifclicked()),
-                     &monapp, SLOT(reloadsong()));
+                     &monapp, SLOT(sync()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("About"), SIGNAL(ifclicked()),
-                     &monapp, SLOT(refreshsong()));
+                     &monapp, SLOT(refreshSong()));
     QObject::connect(engine.rootObjects().first()->findChild<QObject*>("Select_song"), SIGNAL(ifselect(QString)),
-                     &monapp, SLOT(selectsong(QString)));
+                     &monapp, SLOT(selectSong(QString)));
 
     //Du udoo vers la tablette
         //changeActive
@@ -101,19 +105,19 @@ int main(int argc, char *argv[])
                      pisteControllers[7], SLOT(setUnchecked()));
 
 
-    QObject::connect(&monapp, SIGNAL(threshold_receive(QVariant)),
+    QObject::connect(&monapp, SIGNAL(thresholdReceive(QVariant)),
                      engine.rootObjects().first()->findChild<QObject*>("threshold"), SLOT(aff_threshold(QVariant)));
-    QObject::connect(&monapp, SIGNAL(update_beat(QVariant)),
+    QObject::connect(&monapp, SIGNAL(updateBeat(QVariant)),
                      engine.rootObjects().first()->findChild<QObject*>("Beat"), SLOT(aff_beat(QVariant)));
-    //QObject::connect(&monapp, SIGNAL(update_titre(QVariant)),
+    //QObject::connect(&monapp, SIGNAL(updateTitle(QVariant)),
       //               engine.rootObjects().first()->findChild<QObject*>("Titre"), SLOT(aff_titre(QVariant)));
-    QObject::connect(&monapp, SIGNAL(update_liste(QVariant)),
+    QObject::connect(&monapp, SIGNAL(updateList(QVariant)),
                      engine.rootObjects().first()->findChild<QObject*>("Liste"), SLOT(aff_liste(QVariant)));
-    QObject::connect(&monapp, SIGNAL(update_totaltrack(QVariant)),
+    QObject::connect(&monapp, SIGNAL(updateTotalTrack(QVariant)),
                      engine.rootObjects().first(), SLOT(totaltrack(QVariant)));
-    //QObject::connect(&monapp, SIGNAL(update_ready(bool)),
+    //QObject::connect(&monapp, SIGNAL(updateReady(bool)),
       //               engine.rootObjects().first()->findChild<QObject*>("Ready"), SLOT(is_ready(bool)));
-    QObject::connect(&monapp, SIGNAL(update_liste_track(QVariant)),
+    QObject::connect(&monapp, SIGNAL(updateTrackList(QVariant)),
                      engine.rootObjects().first(), SLOT(aff_liste_track(QVariant)));
 
     return app.exec();
