@@ -279,7 +279,38 @@ public slots:
         void decimal2BinaryInBool(int val, bool res[], int size);
         void syncBox(int val);
 
+    private:
+        Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY updateBeat)
+        Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
+public slots:
+
+        bool isPlaying() const {
+            return m_isPlaying;
+        }
+        void setPlaying(bool playing)
+        {
+            if(playing != m_isPlaying)
+            {
+                m_isPlaying = playing;
+                emit playingChanged();
+            }
+        }
+
+        int beat() const {
+            return m_currentBeat;
+        }
+        void setBeat(int beat) {
+            if(beat != m_currentBeat)
+            {
+                m_currentBeat = beat;
+                emit updateBeat(m_currentBeat);
+            }
+        }
+
     signals:
+
+        void playingChanged();
+
         void channel0();
         void channel1();
         void channel2();

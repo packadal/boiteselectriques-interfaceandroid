@@ -39,6 +39,8 @@ Application::Application(QObject *parent) :
     m_oscReceiver.run();
 
     m_beatsTimer.start();
+
+    setBeat(0);
 }
 
 void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args)
@@ -84,7 +86,7 @@ void Application::handle__box_play(osc::ReceivedMessageArgumentStream args){
     args >> tempo;
     tempo= (int)tempo;
 
-    m_isPlaying= true;
+    setPlaying(true);
     std::thread (&Application::playBeats, this, tempo).detach();
 }
 
@@ -205,7 +207,7 @@ void Application::play()
 
 void Application::stop(){
     m_sender.send(osc::MessageGenerator()("/box/stop", true));
-    m_isPlaying= false;
+    setPlaying(false);
     m_currentBeat= 0;
 }
 
@@ -214,15 +216,17 @@ void Application::masterVolume(int vol)
 
 void Application::reset(){
     m_sender.send(osc::MessageGenerator()("/box/reset", true));
-    m_isPlaying= false;
+    setPlaying(false);
     m_currentBeat= 0;
 }
 
 void Application::resetThreshold()
 { m_sender.send(osc::MessageGenerator()("/box/reset_threshold", true)); }
 
-void Application::refreshSong()
-{ m_sender.send(osc::MessageGenerator()("/box/refresh_song", true)); }
+void Application::refreshSong() {
+    setBeat(0);
+    m_sender.send(osc::MessageGenerator()("/box/refresh_song", true));
+}
 
 void Application::selectSong(QString song)
 {

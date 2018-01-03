@@ -479,16 +479,17 @@ ApplicationWindow {
                 }
 
                 //Barre
-                Repeater{
+                Repeater {
                     id: barre_mesure
-                    model:32
-                    delegate: Rectangle{
+                    model: 32
+                    delegate: Rectangle {
                         width: 30
                         height: 30
                         radius: 3
                         border.color: "black"
                         border.width: 2
-                        color: "transparent"
+                        color: (index < app.beat) ? ((index % 4
+                                                      == 0) ? "black" : "green") : "transparent"
                     }
                 }
 
@@ -503,23 +504,8 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.horizontalCenter: parent.horizontalCenter
                         id: name
-                        text: qsTr("0/32")
-                        color:"white"
-                    }
-                    function aff_beat(arg){
-                        name.text=arg+"/32"
-
-                        if ((arg-1) == 0){
-                            barre_mesure.itemAt(0).color="black"
-                            for(var i=1;i<32;i++){
-                                barre_mesure.itemAt(i).color="transparent"
-                            }
-                        }
-                        if (Math.floor((arg-1) % 4)){
-                           barre_mesure.itemAt(arg-1).color="green"
-                        }else{
-                           barre_mesure.itemAt(arg-1).color="black"
-                        }
+                        text: app.beat + "/32"
+                        color: "white"
                     }
                 }
             }
@@ -527,43 +513,26 @@ ApplicationWindow {
             //Ligne Play/Stop/Master/Reset
             Row {
                 spacing: 10
-                x: 30; y: 600
+                x: 30
+                y: 600
 
                 //Play
-                Rectangle{
-                    width: 100; height: 70
+                Rectangle {
+                    width: 100
+                    height: 70
                     color: "transparent"
-                    Button{
+                    Button {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
                         id: play
-                        signal ifclicked ()
-                        objectName: "Play"
                         width: 100
                         height: 60
-                        checkable: true
-                        onClicked: play.ifclicked()
-                        style: style_play
-                        onCheckedChanged: play.enabled = false
-                    }
-                }
-
-                //Stop
-                Rectangle{
-                    width: 100; height: 70
-                    color: "transparent"
-                    Button{
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-                        id: stop
-                        signal ifclicked ()
-                        objectName: "Stop"
-                        width: 100
-                        height: 60
-                        checkable: true
-                        onClicked: stop.ifclicked()
-                        style: style_stop
-                        onPressedChanged: disable_play()
+                        onClicked: app.playing ? app.stop() : app.play()
+                        Image {
+                            source: app.playing ? "qrc:///images/ic_stop_white_48dp.png" : "qrc:///images/ic_play_arrow_white_48dp.png"
+                            anchors.fill: parent
+                            fillMode: Image.PreserveAspectFit
+                        }
                     }
                 }
 
