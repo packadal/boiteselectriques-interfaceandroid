@@ -4,5 +4,12 @@
         <file>images/logo_80.png</file>
         <file>PisteController.qml</file>
         <file>images/Reload_32.png</file>
+        <file>images/ic_equalizer_white_48dp.png</file>
+        <file>images/ic_exit_to_app_white_48dp.png</file>
+        <file>images/ic_hearing_white_48dp.png</file>
+        <file>images/ic_pause_white_48dp.png</file>
+        <file>images/ic_play_arrow_white_48dp.png</file>
+        <file>images/ic_stop_white_48dp.png</file>
+        <file>images/ic_refresh_white_48dp.png</file>
     </qresource>
 </RCC>
