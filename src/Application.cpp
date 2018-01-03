@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <cmath>
+
 Application::Application(QObject *parent) :
 	QObject(parent)
 {
