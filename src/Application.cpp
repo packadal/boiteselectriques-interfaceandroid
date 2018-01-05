@@ -21,9 +21,6 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler("/box/songs_list",
                            std::bind(&Application::handle__box_songsList, this,
                                      std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/tracks_count",
-                           std::bind(&Application::handle__box_tracksCount,
-                                     this, std::placeholders::_1));
   m_oscReceiver.addHandler(
       "/box/ready",
       std::bind(&Application::handle__box_ready, this, std::placeholders::_1));
@@ -41,14 +38,14 @@ Application::Application(QObject* parent) : QObject(parent) {
 void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args) {
   osc::int32 threshold_in;
   args >> threshold_in;
-  sendThreshold(QString::number(threshold_in));
+  setThreshold(threshold_in);
 }
 
 void Application::handle__box_tracksList(
     osc::ReceivedMessageArgumentStream args) {
   const char* listeT;
   args >> listeT;
-  sendTracksList(listeT);
+  setTrackList(QString(listeT).split('|'));
 }
 
 void Application::handle__box_enableSync(
@@ -73,27 +70,20 @@ void Application::handle__box_play(osc::ReceivedMessageArgumentStream args) {
   tempo = static_cast<int>(tempo);
 
   setPlaying(true);
-  std::thread(&Application::playBeats, this, tempo).detach();
 }
 
 void Application::handle__box_title(osc::ReceivedMessageArgumentStream args) {
-  const char* titre;
-  args >> titre;
-  sendTitle(titre);
+  const char* title;
+  args >> title;
+  setCurrentSongTitle(title);
 }
 
 void Application::handle__box_songsList(
     osc::ReceivedMessageArgumentStream args) {
   const char* liste;
   args >> liste;
-  sendList(liste);
-}
 
-void Application::handle__box_tracksCount(
-    osc::ReceivedMessageArgumentStream args) {
-  osc::int32 totaltrack;
-  args >> totaltrack;
-  tracksCount(QString::number(totaltrack));
+  setSongList(QString(liste).split('|'));
 }
 
 void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
@@ -102,40 +92,8 @@ void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
   ready(go);
 }
 
-void Application::nextBeat(int beat) {
-  m_beatsTimer.restart();
-  if (beat >= 0) {
-    m_currentBeat = beat;
-  }
-
-  emit updateBeat(++m_currentBeat);
-  qDebug() << m_currentBeat;
-  if (m_currentBeat >= 32) {
-    m_currentBeat = 0;
-  }
-}
-
-void Application::playBeats(int tempo) {
-  qDebug() << tempo;
-  double intervalBeats = 60 / static_cast<double>(tempo) * 1000;  // ms
-  double timeLeftToNext;
-
-  nextBeat(0);
-  while (m_isPlaying) {
-    timeLeftToNext = intervalBeats - m_beatsTimer.elapsed();
-    if (timeLeftToNext <= 0) {
-      nextBeat(-1);
-      m_beatsTimer = m_beatsTimer.addMSecs(-timeLeftToNext);
-    } else if (timeLeftToNext > 10) {
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(static_cast<int>(timeLeftToNext) * 99 / 100));
-    }
-  }
-  updateBeat(0);
-}
-
 void Application::syncBox(int val) {
-  for (size_t i = 0; i < 8; ++i) {
+  for (int i = 0; i < 8; ++i) {
     // this creates an integer with only one bit enabled, which is the i-th one,
     // e.g. for i == 4, this will make an int whose value is 0b00010000
     const int mask = 1 << i;
@@ -179,7 +137,7 @@ void Application::play() {
 void Application::stop() {
   m_sender.send(osc::MessageGenerator()("/box/stop", true));
   setPlaying(false);
-  m_currentBeat = 0;
+  setBeat(0);
 }
 
 void Application::masterVolume(int vol) {
@@ -189,7 +147,7 @@ void Application::masterVolume(int vol) {
 void Application::reset() {
   m_sender.send(osc::MessageGenerator()("/box/reset", true));
   setPlaying(false);
-  m_currentBeat = 0;
+  setBeat(0);
 }
 
 void Application::resetThreshold() {
@@ -228,26 +186,6 @@ void Application::setChannel(int chan, bool enabled) {
   };
 
   enableFunctions[chan](enabled);
-}
-
-void Application::sendThreshold(QVariant thresholdIn) {
-  emit thresholdReceive(thresholdIn);
-}
-
-void Application::sendTitle(QVariant title) {
-  emit updateTitle(title);
-}
-
-void Application::sendList(QVariant list) {
-  emit updateList(list);
-}
-
-void Application::sendTracksList(QVariant trackList) {
-  emit updateTrackList(trackList);
-}
-
-void Application::tracksCount(QVariant totalTrack) {
-  emit updateTotalTrack(totalTrack);
 }
 
 void Application::ready(bool go) {

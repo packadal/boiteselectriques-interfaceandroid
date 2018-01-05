@@ -12,6 +12,14 @@ Item {
 
     property alias checked: mainButton.checked
 
+    property bool enabled: app.trackList.length > trackID
+    onEnabledChanged: {
+        if(enabled)
+            enable();
+        else
+            disable();
+    }
+
     signal volumeChanged(int volume, int channel)
     signal panChanged(int pan, int channel)
     signal mute(int channel, bool muted)
@@ -44,6 +52,7 @@ Item {
             width: parent.width - 3
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
+            text: app.trackList.length > trackController.trackID ? app.trackList[trackController.trackID] : ""
         }
     }
 

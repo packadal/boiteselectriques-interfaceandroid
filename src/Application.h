@@ -27,7 +27,7 @@ class Application : public QObject {
   Q_OBJECT
 
  public:
-  explicit Application(QObject* parent = 0);
+  explicit Application(QObject* parent = nullptr);
 
   /**
    * @brief Song's title getter
@@ -82,11 +82,6 @@ class Application : public QObject {
    * @param args Song's title
    */
   void handle__box_title(osc::ReceivedMessageArgumentStream args);
-  /**
-   * @brief tracks_count event handling
-   * @param args Song's tracks count
-   */
-  void handle__box_tracksCount(osc::ReceivedMessageArgumentStream args);
   /**
    * @brief tracks_list event handling
    * @param args Song's list of tracks
@@ -214,37 +209,6 @@ class Application : public QObject {
    */
   void setChannel(int chan, bool enabled);
   /**
-   * @brief Update the client's threshold
-   * @param threshold New threshold
-   */
-  void sendThreshold(QVariant thresholdIn);
-  /**
-   * @brief Update the client's current song
-   * @param title New title
-   */
-  void sendTitle(QVariant title);
-  /**
-   * @brief Update the client's songs' list
-   * @param list List of songs
-   *
-   * The list is the concatenation of the songs' filenames,
-   * separated by the character |
-   */
-  void sendList(QVariant list);
-  /**
-   * @brief Update the client's current song's list of tracks
-   * @param trackList New list of tracks
-   *
-   * The list is the concatenation of the tracks' names,
-   * separated by the character |
-   */
-  void sendTracksList(QVariant trackList);
-  /**
-   * @brief Update the count of the current server's song's tracks
-   * @param totalTrack
-   */
-  void tracksCount(QVariant totalTrack);
-  /**
    * @brief Signals that the current song is loaded
    * @param go New ready state
    */
@@ -260,12 +224,16 @@ class Application : public QObject {
 
   QString m_song{""};
 
-  void nextBeat(int beat = -1);
-  void playBeats(int tempo);
   void syncBox(int val);
 
  private:
-  Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY updateBeat)
+  Q_PROPERTY(QString currentSongTitle READ currentSongTitle WRITE
+                 setCurrentSongTitle NOTIFY currentSongTitleChanged)
+  Q_PROPERTY(QStringList songList READ songList WRITE setSongList NOTIFY
+                 songListChanged)
+  Q_PROPERTY(QStringList trackList READ trackList WRITE setTrackList NOTIFY
+                 trackListChanged)
+  Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY beatChanged)
   Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
   Q_PROPERTY(
       bool channel0 READ channel0 WRITE setChannel0 NOTIFY channel0Changed)
@@ -284,6 +252,14 @@ class Application : public QObject {
   Q_PROPERTY(
       bool channel7 READ channel7 WRITE setChannel7 NOTIFY channel7Changed)
 
+  Q_PROPERTY(
+      int threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
+
+  int m_threshold;
+  QStringList m_songList = {};
+  QStringList m_trackList = {};
+  QString m_currentSongTitle = QString::null;
+
   bool m_channel0 = false;
   bool m_channel1 = false;
   bool m_channel2 = false;
@@ -293,6 +269,31 @@ class Application : public QObject {
   bool m_channel6 = false;
   bool m_channel7 = false;
  public slots:
+
+  void setCurrentSongTitle(const QString& title) {
+    if (title != m_currentSongTitle) {
+      m_currentSongTitle = title;
+      emit currentSongTitleChanged();
+    }
+  }
+
+  void setThreshold(int threshold) {
+    if (threshold != m_threshold) {
+      m_threshold = threshold;
+      emit thresholdChanged();
+      updateThreshold(m_threshold);
+    }
+  }
+
+  void setTrackList(const QStringList& trackList) {
+    m_trackList = trackList;
+    trackListChanged();
+  }
+
+  void setSongList(const QStringList& songList) {
+    m_songList = songList;
+    songListChanged();
+  }
 
   void setPlaying(bool playing) {
     if (playing != m_isPlaying) {
@@ -304,7 +305,7 @@ class Application : public QObject {
   void setBeat(int beat) {
     if (beat != m_currentBeat) {
       m_currentBeat = beat;
-      emit updateBeat(m_currentBeat);
+      emit beatChanged();
     }
   }
 
@@ -365,6 +366,8 @@ class Application : public QObject {
   }
 
  public:
+  int threshold() const { return m_threshold; }
+  QString currentSongTitle() const { return m_currentSongTitle; }
   bool isPlaying() const { return m_isPlaying; }
   int beat() const { return m_currentBeat; }
 
@@ -384,6 +387,9 @@ class Application : public QObject {
 
   bool channel7() const { return m_channel7; }
 
+  const QStringList& songList() const { return m_songList; }
+  const QStringList& trackList() const { return m_trackList; }
+
  signals:
 
   void playingChanged();
@@ -397,12 +403,11 @@ class Application : public QObject {
   void channel6Changed();
   void channel7Changed();
 
-  void thresholdReceive(QVariant);
-  void updateBeat(QVariant);
-  void updateTitle(QVariant);
-  void updateList(QVariant);
-  void updateTrackList(QVariant);
-  void updateTotalTrack(QVariant);
+  void songListChanged();
+  void currentSongTitleChanged();
+  void trackListChanged();
+  void beatChanged();
+  void thresholdChanged();
   void updateReady(bool);
 };
 

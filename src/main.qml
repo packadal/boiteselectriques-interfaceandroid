@@ -22,13 +22,94 @@ ApplicationWindow {
     /************************************************/
     //Fonctions de chargement
     function showLoading() {
-        item_preload.visible = true
-        mixwindow.visible = false
+        songSelector.visible = false
+        loading_indicator.visible = true
+        mixing_panel.visible = false
     }
-    function endLoading() {
-        item_preload.visible = false
-        mixwindow.visible = true
+
+    StateGroup {
+        id: windowStates
+        state: "selecting"
+        states: [
+            State {
+                name: "selecting"
+                PropertyChanges {
+                    target: songSelector
+                    visible: true
+                }
+                PropertyChanges {
+                    target: mixing_panel
+                    visible: false
+                }
+                PropertyChanges {
+                    target: loading_indicator
+                    visible: false
+                }
+                PropertyChanges {
+                    target: sensitivity_threshold
+                    visible: false
+                }
+            },
+            State {
+                name: "editing_threshold"
+                PropertyChanges {
+                    target: songSelector
+                    visible: false
+                }
+                PropertyChanges {
+                    target: mixing_panel
+                    visible: false
+                }
+                PropertyChanges {
+                    target: loading_indicator
+                    visible: false
+                }
+                PropertyChanges {
+                    target: sensitivity_threshold
+                    visible: true
+                }
+            },
+            State {
+                name: "loading"
+                PropertyChanges {
+                    target: songSelector
+                    visible: false
+                }
+                PropertyChanges {
+                    target: mixing_panel
+                    visible: false
+                }
+                PropertyChanges {
+                    target: loading_indicator
+                    visible: true
+                }
+                PropertyChanges {
+                    target: sensitivity_threshold
+                    visible: false
+                }
+            },
+            State {
+                name: "mixing"
+                PropertyChanges {
+                    target: songSelector
+                    visible: false
+                }
+                PropertyChanges {
+                    target: mixing_panel
+                    visible: true
+                }
+                PropertyChanges {
+                    target: loading_indicator
+                    visible: false
+                }
+                PropertyChanges {
+                    target: sensitivity_threshold
+                    visible: false
+                }
+            }
+        ]
     }
+
 
     //Renvoie l'id de la piste i
     function idPiste(i) {
@@ -89,45 +170,21 @@ ApplicationWindow {
             idPiste(i).resetPiste()
     }
 
-    //Désactive les pistes en trop
-    function totaltrack(nmb) {
-        for (var i = 0; i < nbPistesTotal; i++) {
-            if (i < nmb)
-                idPiste(i).enable()
-            else
-                idPiste(i).disable()
-        }
-        endLoading()
-    }
-
-    //Affiche le nom des pistes
-    function aff_liste_track(liste) {
-        if (liste != "") {
-            var aff = liste.split("|")
-            for (var i = 0; i < aff.length; i++)
-                idPiste(i).changeText(qsTr(aff[i]))
-            for (; i < nbPistesTotal; i++)
-                idPiste(i).changeText("")
-        }
-    }
-
     function float2int(value) {
         return value | 0
     }
 
-    /************************************************/
-    MessageDialog {
-        id: about
-        objectName: "About"
-        title: "A propos"
-        text: "Copyright Rock & Chanson 2015\nVersion: b3.0"
-        Component.onCompleted: visible = true
-        onAccepted: {
-            app.refreshSong();
-            select_titre.visible=true;
-            select_titre.activeFocusOnPress=true;
-        }
-     }
+    function loadingFinished(isFinished)
+    {
+        if(isFinished)
+            windowStates.state = "mixing";
+    }
+
+    Component.onCompleted: {
+        app.sync();
+
+        app.onUpdateReady.connect(root.loadingFinished)
+    }
 
     /************************************************/
     /*                                              */
@@ -166,7 +223,7 @@ ApplicationWindow {
         Button {
             id: reload
             objectName: "Reload"
-            anchors.right: select_titre.left
+            anchors.left: title.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             checkable: false
@@ -175,46 +232,30 @@ ApplicationWindow {
             iconSource: "qrc:///images/ic_refresh_white_48dp.png"
         }
 
-        // Song List
-        ComboBox {
-            id: select_titre
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            objectName: "Select_song"
-            //                visible: false
-            focus: true
-            width: 300
+        Item {
+            id: changeSong
+            anchors.centerIn: parent
+            width: changeSongIcon.width + changeSongText.width + 8
             height: parent.height
-            style: style_combobox
-            model: ListModel {
-                id: cbitems
-                ListElement {
-                    text: "Choisir un titre"
-                    link: ""
-                }
+            property alias text: changeSongText.text
+
+            Image {
+                id: changeSongIcon
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                source: "qrc:///images/ic_library_music_white_24dp.png"
             }
-            onCurrentIndexChanged: {
-                if (cbitems.get(currentIndex).link != "") {
-                    showLoading()
-                    doReset()
-                    app.selectSong(cbitems.get(currentIndex).link)
-                }
+            Text {
+                id: changeSongText
+                anchors.left: changeSongIcon.right
+                anchors.leftMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                text: app.currentSongTitle
+                color: "white"
             }
-        }
-        function aff_liste(liste) {
-            doReset()
-            cbitems.clear()
-            cbitems.append({
-                               text: "Choisir un titre",
-                               link: ""
-                           })
-            var aff = liste.split("|")
-            for (var i = 0; i < aff.length; i++) {
-                var aff2 = aff[i].split(".song")
-                cbitems.append({
-                                   text: aff2[0],
-                                   link: aff[i]
-                               })
+            MouseArea {
+                anchors.fill: parent
+                onClicked: windowStates.state = "selecting";
             }
         }
 
@@ -226,19 +267,12 @@ ApplicationWindow {
             anchors.rightMargin: 32
 
             anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Sensibilité :")
+            text: qsTr("Sensibilité: ") + app.threshold
             color: "white"
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: {
-                    item_threshold.visible = true
-                }
-            }
-            function aff_threshold(sensor) {
-                var aff_t = sensor
-                threshold_value.text = qsTr("Sensibilité: " + aff_t)
-                new_threshold.value = aff_t
+                onClicked: windowStates.state = "editing_threshold"
             }
         }
 
@@ -270,9 +304,8 @@ ApplicationWindow {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        //Loading indicator
         Text {
-            id: item_preload
+            id: loading_indicator
             visible: false
             anchors.centerIn: parent
             text: qsTr("Chargement en cours...")
@@ -292,10 +325,46 @@ ApplicationWindow {
             }
         }
 
-        //Sensibilité
         Item {
+            id: songSelector
             anchors.fill: parent
-            id: item_threshold
+            visible: true
+
+            Flow {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 8
+
+                Repeater {
+                    model: app.songList
+                    delegate:
+                        Button {
+                        text: modelData
+                        style: simpleButtonStyle
+                        onClicked: {
+                            doReset();
+                            changeSong.text = modelData;
+                            windowStates.state = "loading";
+                            app.selectSong(modelData);
+                        }
+                        //TODO use long press to delete
+                        // using MouseArea pressAndHold
+                    }
+                }
+            }
+
+            Button {
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 16
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Cancel"
+                onClicked: windowStates.state = "mixing";
+            }
+        }
+
+        Item {
+            id: sensitivity_threshold
+            anchors.fill: parent
             visible: false
 
             ColumnLayout {
@@ -320,10 +389,9 @@ ApplicationWindow {
                     implicitWidth: 600
                     minimumValue: 0
                     maximumValue: 99
-                    value: 0
+                    value: app.threshold
+                    onValueChanged: app.threshold = new_threshold.value
                     style: touchStyle_threshold
-                    onValueChanged: app.updateThreshold(
-                                        new_threshold.value)
                     Text {
                         anchors.centerIn: parent
                         text: new_threshold.value
@@ -333,20 +401,14 @@ ApplicationWindow {
 
                 Button {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    checkable: true
-                    onClicked: {
-                        item_threshold.visible = false
-                        threshold_value.text = qsTr(
-                                    "Sensibilité: " + new_threshold.value)
-                    }
+                    onClicked: windowStates.state = "mixing"
                     text: qsTr("Valider")
                 }
             }
         }
 
-        //Fenêtre principale
         Item {
-            id: mixwindow
+            id: mixing_panel
             anchors.fill: parent
             anchors.margins: 32
             visible: false
@@ -473,7 +535,7 @@ ApplicationWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 100
                     height: 60
-                    style:simpleButtonStyle
+                    style: simpleButtonStyle
                     onClicked: app.playing ? app.stop() : app.play()
                     Image {
                         source: app.playing ? "qrc:///images/ic_stop_white_48dp.png" : "qrc:///images/ic_play_arrow_white_48dp.png"
@@ -500,8 +562,7 @@ ApplicationWindow {
                     value: 50
                     property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
                     style: touchStyle_master
-                    onValueChanged: app.masterVolume(
-                                        volumeMasterSlider.value)
+                    onValueChanged: app.masterVolume(volumeMasterSlider.value)
                     MouseArea {
                         id: volumeMasterSliderMouse
                         anchors.fill: parent
@@ -524,8 +585,8 @@ ApplicationWindow {
                     id: reset
 
                     function doReset() {
-                        app.reset();
-                        app.resetThreshold();
+                        app.reset()
+                        app.resetThreshold()
                     }
 
                     anchors.verticalCenter: parent.verticalCenter
