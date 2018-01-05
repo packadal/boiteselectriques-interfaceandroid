@@ -48,11 +48,6 @@ class Application : public QObject{
          */
         void handle__box_sensor(osc::ReceivedMessageArgumentStream args);
         /**
-         * @brief enable_out event handling
-         * @param args Triggered box's id
-         */
-        void handle__box_enableOut(osc::ReceivedMessageArgumentStream args);
-        /**
          * @brief enable_sync event handling
          * @param args The list of the enabled tracks
          *
@@ -213,20 +208,10 @@ public slots:
         *******************/
 
         /**
-         * @brief Toggle a client's track
-         * @param chan Track number
-         */
-        void activeBox(int chan);
-        /**
          * @brief Activate a client's track
          * @param chan Track number
          */
-        void checkBox(int chan);
-        /**
-         * @brief Deactivate a client's track
-         * @param chan Track number
-         */
-        void uncheckBox(int chan);
+        void setChannel(int chan, bool enabled);
         /**
          * @brief Update the client's threshold
          * @param threshold New threshold
@@ -276,17 +261,30 @@ public slots:
 
         void nextBeat(int beat= -1);
         void playBeats(int tempo);
-        void decimal2BinaryInBool(int val, bool res[], int size);
         void syncBox(int val);
 
     private:
         Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY updateBeat)
         Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
+        Q_PROPERTY(bool channel0 READ channel0 WRITE setChannel0 NOTIFY channel0Changed)
+        Q_PROPERTY(bool channel1 READ channel1 WRITE setChannel1 NOTIFY channel1Changed)
+        Q_PROPERTY(bool channel2 READ channel2 WRITE setChannel2 NOTIFY channel2Changed)
+        Q_PROPERTY(bool channel3 READ channel3 WRITE setChannel3 NOTIFY channel3Changed)
+        Q_PROPERTY(bool channel4 READ channel4 WRITE setChannel4 NOTIFY channel4Changed)
+        Q_PROPERTY(bool channel5 READ channel5 WRITE setChannel5 NOTIFY channel5Changed)
+        Q_PROPERTY(bool channel6 READ channel6 WRITE setChannel6 NOTIFY channel6Changed)
+        Q_PROPERTY(bool channel7 READ channel7 WRITE setChannel7 NOTIFY channel7Changed)
+
+        bool m_channel0;
+        bool m_channel1;
+        bool m_channel2;
+        bool m_channel3;
+        bool m_channel4;
+        bool m_channel5;
+        bool m_channel6;
+        bool m_channel7;
 public slots:
 
-        bool isPlaying() const {
-            return m_isPlaying;
-        }
         void setPlaying(bool playing)
         {
             if(playing != m_isPlaying)
@@ -296,9 +294,6 @@ public slots:
             }
         }
 
-        int beat() const {
-            return m_currentBeat;
-        }
         void setBeat(int beat) {
             if(beat != m_currentBeat)
             {
@@ -307,34 +302,131 @@ public slots:
             }
         }
 
+        void setChannel0(bool enabled)
+        {
+            if(enabled != m_channel0)
+            {
+                m_channel0 = enabled;
+                emit channel0Changed();
+            }
+        }
+
+        void setChannel1(bool enabled)
+        {
+            if(enabled != m_channel1)
+            {
+                m_channel1 = enabled;
+                emit channel1Changed();
+            }
+        }
+
+        void setChannel2(bool enabled)
+        {
+            if(enabled != m_channel2)
+            {
+                m_channel2 = enabled;
+                emit channel2Changed();
+            }
+        }
+
+        void setChannel3(bool enabled)
+        {
+            if(enabled != m_channel3)
+            {
+                m_channel3 = enabled;
+                emit channel3Changed();
+            }
+        }
+
+        void setChannel4(bool enabled)
+        {
+            if(enabled != m_channel4)
+            {
+                m_channel4 = enabled;
+                emit channel4Changed();
+            }
+        }
+
+        void setChannel5(bool enabled)
+        {
+            if(enabled != m_channel5)
+            {
+                m_channel5 = enabled;
+                emit channel5Changed();
+            }
+        }
+
+        void setChannel6(bool enabled)
+        {
+            if(enabled != m_channel6)
+            {
+                m_channel6 = enabled;
+                emit channel6Changed();
+            }
+        }
+
+        void setChannel7(bool enabled)
+        {
+            if(enabled != m_channel7)
+            {
+                m_channel7 = enabled;
+                emit channel7Changed();
+            }
+        }
+
+public:
+        bool isPlaying() const {
+            return m_isPlaying;
+        }
+        int beat() const {
+            return m_currentBeat;
+        }
+
+        bool channel0() const {
+            return m_channel0;
+        }
+
+        bool channel1() const {
+            return m_channel1;
+        }
+
+        bool channel2() const {
+            return m_channel2;
+        }
+
+        bool channel3() const {
+            return m_channel3;
+        }
+
+        bool channel4() const {
+            return m_channel4;
+        }
+
+        bool channel5() const {
+            return m_channel5;
+        }
+
+        bool channel6() const {
+            return m_channel6;
+        }
+
+        bool channel7() const {
+            return m_channel7;
+        }
+
     signals:
 
         void playingChanged();
 
-        void channel0();
-        void channel1();
-        void channel2();
-        void channel3();
-        void channel4();
-        void channel5();
-        void channel6();
-        void channel7();
-        void check0();
-        void check1();
-        void check2();
-        void check3();
-        void check4();
-        void check5();
-        void check6();
-        void check7();
-        void uncheck0();
-        void uncheck1();
-        void uncheck2();
-        void uncheck3();
-        void uncheck4();
-        void uncheck5();
-        void uncheck6();
-        void uncheck7();
+        void channel0Changed();
+        void channel1Changed();
+        void channel2Changed();
+        void channel3Changed();
+        void channel4Changed();
+        void channel5Changed();
+        void channel6Changed();
+        void channel7Changed();
+
         void thresholdReceive(QVariant);
         void updateBeat(QVariant);
         void updateTitle(QVariant);

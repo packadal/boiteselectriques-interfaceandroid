@@ -8,9 +8,6 @@ Application::Application(QObject *parent) :
     m_oscReceiver.addHandler("/box/sensor",
                             std::bind(&Application::handle__box_sensor,
                                       this, std::placeholders::_1));
-    m_oscReceiver.addHandler("/box/enable_out",
-                            std::bind(&Application::handle__box_enableOut,
-                                      this, std::placeholders::_1));
     m_oscReceiver.addHandler("/box/enable_sync",
                             std::bind(&Application::handle__box_enableSync,
                                       this, std::placeholders::_1));
@@ -57,13 +54,6 @@ void Application::handle__box_tracksList(osc::ReceivedMessageArgumentStream args
     sendTracksList(listeT);
 }
 
-void Application::handle__box_enableOut(osc::ReceivedMessageArgumentStream args)
-{
-    osc::int32 box;
-    args >> box;
-    activeBox(box);
-}
-
 void Application::handle__box_enableSync(osc::ReceivedMessageArgumentStream args)
 {
     osc::int32 val;
@@ -76,7 +66,7 @@ void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args)
     osc::int32 beat;
     args >> beat;
 
-    qDebug() << beat;
+    setBeat(beat);
     //nextBeat((int)beat);
 }
 
@@ -148,35 +138,13 @@ void Application::playBeats(int tempo){
     updateBeat(0);
 }
 
-void Application::decimal2BinaryInBool(int val, bool res[], int size){
-    int p;
-    for(int i= size; i>0; i--){
-        res[i]= false;
-        p= (int)pow(2,i);
-
-        if(p <= val){
-            res[i]= true;
-            val-= p;
-        }
-    }
-    if(val == 1)
-        res[0]= true;
-    else
-        res[0]= false;
-}
-
 void Application::syncBox(int val){
-    //Récupération des valeurs de la UDOO
-    int taille= 8;
-    bool enables[taille];
-    decimal2BinaryInBool(val, enables, taille);
-
-    //Transfert vers la tablette
-    for(int i= 0; i < taille; i++){
-        if(enables[i])
-            checkBox(i);
-        else
-            uncheckBox(i);
+    for(size_t i = 0; i < 8; ++i) {
+        // this creates an integer with only one bit enabled, which is the i-th one,
+        // e.g. for i == 4, this will make an int whose value is 0b00010000
+        const int mask = 1 << i;
+        // this is a binary comparison that checks if val has the bit in the mask set to true or false
+        setChannel(i, mask & val);
     }
 }
 QString Application::song() const
@@ -224,7 +192,6 @@ void Application::resetThreshold()
 { m_sender.send(osc::MessageGenerator()("/box/reset_threshold", true)); }
 
 void Application::refreshSong() {
-    setBeat(0);
     m_sender.send(osc::MessageGenerator()("/box/refresh_song", true));
 }
 
@@ -242,97 +209,21 @@ void Application::reloadSong()
 void Application::sync()
 { m_sender.send(osc::MessageGenerator()("/box/sync", true)); }
 
-void Application::activeBox(int chan)
+void Application::setChannel(int chan, bool enabled)
 {
-    switch(chan)
-    {
-    case 0:
-        emit channel0();
-        break;
-    case 1:
-        emit channel1();
-        break;
-    case 2:
-        emit channel2();
-        break;
-    case 3:
-        emit channel3();
-        break;
-    case 4:
-        emit channel4();
-        break;
-    case 5:
-        emit channel5();
-        break;
-    case 6:
-        emit channel6();
-        break;
-    case 7:
-        emit channel7();
-        break;
-    }
-}
+    static const std::function<void (bool)> enableFunctions[8] = {
+        std::bind(&Application::setChannel0, this, std::placeholders::_1),
+        std::bind(&Application::setChannel1, this, std::placeholders::_1),
+        std::bind(&Application::setChannel2, this, std::placeholders::_1),
+        std::bind(&Application::setChannel3, this, std::placeholders::_1),
+        std::bind(&Application::setChannel4, this, std::placeholders::_1),
+        std::bind(&Application::setChannel5, this, std::placeholders::_1),
+        std::bind(&Application::setChannel6, this, std::placeholders::_1),
+        std::bind(&Application::setChannel7, this, std::placeholders::_1),
+    };
 
-void Application::checkBox(int chan)
-{
-    switch(chan)
-    {
-    case 0:
-        emit check0();
-        break;
-    case 1:
-        emit check1();
-        break;
-    case 2:
-        emit check2();
-        break;
-    case 3:
-        emit check3();
-        break;
-    case 4:
-        emit check4();
-        break;
-    case 5:
-        emit check5();
-        break;
-    case 6:
-        emit check6();
-        break;
-    case 7:
-        emit check7();
-        break;
-    }
-}
+    enableFunctions[chan](enabled);
 
-void Application::uncheckBox(int chan)
-{
-    switch(chan)
-    {
-    case 0:
-        emit uncheck0();
-        break;
-    case 1:
-        emit uncheck1();
-        break;
-    case 2:
-        emit uncheck2();
-        break;
-    case 3:
-        emit uncheck3();
-        break;
-    case 4:
-        emit uncheck4();
-        break;
-    case 5:
-        emit uncheck5();
-        break;
-    case 6:
-        emit uncheck6();
-        break;
-    case 7:
-        emit uncheck7();
-        break;
-    }
 }
 
 void Application::sendThreshold(QVariant thresholdIn){
