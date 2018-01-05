@@ -70,7 +70,7 @@ void Application::handle__box_play(osc::ReceivedMessageArgumentStream args) {
   m_beatsTimer.restart();
   osc::int32 tempo;
   args >> tempo;
-  tempo = (int)tempo;
+  tempo = static_cast<int>(tempo);
 
   setPlaying(true);
   std::thread(&Application::playBeats, this, tempo).detach();
@@ -117,7 +117,7 @@ void Application::nextBeat(int beat) {
 
 void Application::playBeats(int tempo) {
   qDebug() << tempo;
-  double intervalBeats = 60 / (double)tempo * 1000;  // ms
+  double intervalBeats = 60 / static_cast<double>(tempo) * 1000;  // ms
   double timeLeftToNext;
 
   nextBeat(0);
@@ -128,7 +128,7 @@ void Application::playBeats(int tempo) {
       m_beatsTimer = m_beatsTimer.addMSecs(-timeLeftToNext);
     } else if (timeLeftToNext > 10) {
       std::this_thread::sleep_for(
-          std::chrono::milliseconds((int)timeLeftToNext * 99 / 100));
+          std::chrono::milliseconds(static_cast<int>(timeLeftToNext) * 99 / 100));
     }
   }
   updateBeat(0);
