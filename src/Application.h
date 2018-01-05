@@ -255,7 +255,7 @@ class Application : public QObject {
   OscReceiver m_oscReceiver{9989};
 
   bool m_isPlaying{false};
-  int m_currentBeat;
+  int m_currentBeat = 0;
   QTime m_beatsTimer{};
 
   QString m_song{""};
@@ -284,14 +284,14 @@ class Application : public QObject {
   Q_PROPERTY(
       bool channel7 READ channel7 WRITE setChannel7 NOTIFY channel7Changed)
 
-  bool m_channel0;
-  bool m_channel1;
-  bool m_channel2;
-  bool m_channel3;
-  bool m_channel4;
-  bool m_channel5;
-  bool m_channel6;
-  bool m_channel7;
+  bool m_channel0 = false;
+  bool m_channel1 = false;
+  bool m_channel2 = false;
+  bool m_channel3 = false;
+  bool m_channel4 = false;
+  bool m_channel5 = false;
+  bool m_channel6 = false;
+  bool m_channel7 = false;
  public slots:
 
   void setPlaying(bool playing) {
