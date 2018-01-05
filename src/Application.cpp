@@ -197,7 +197,7 @@ void Application::refreshSong() {
   m_sender.send(osc::MessageGenerator()("/box/refresh_song", true));
 }
 
-void Application::selectSong(QString song) {
+void Application::selectSong(const QString& song) {
   m_song = song;
   QByteArray so = song.toLatin1();
   const char* c_song = so.data();

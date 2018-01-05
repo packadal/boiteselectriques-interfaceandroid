@@ -194,7 +194,7 @@ class Application : public QObject {
    *
    * Ask the server to change the current song
    */
-  void selectSong(QString song);
+  void selectSong(const QString& song);
   /**
    * @brief Reload the current server's song
    */
