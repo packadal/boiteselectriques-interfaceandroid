@@ -1,6 +1,7 @@
 import QtQuick 2.3
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.1
+import QtQuick.Controls.Styles 1.4
 
 Item {
     id: trackController
@@ -12,13 +13,67 @@ Item {
 
     property alias checked: mainButton.checked
 
-    property bool enabled: app.trackList.length > trackID
-    onEnabledChanged: {
-        if(enabled)
-            enable();
-        else
-            disable();
-    }
+    state: app.trackList.length > trackID ? "enabled" : "disabled"
+    states: [
+        State {
+            name: "enabled"
+            PropertyChanges {
+                target: mainButton
+                enabled: true
+                opacity: 1
+            }
+            PropertyChanges {
+                target: volumeSlider
+                enabled: true
+                opacity: 1
+                style: touchStyle
+            }
+            PropertyChanges {
+                target: panSlider
+                enabled: true
+                opacity: 1
+            }
+            PropertyChanges {
+                target: muteButton
+                enabled: true
+                opacity: 1
+            }
+            PropertyChanges {
+                target: soloButton
+                enabled: true
+                opacity: 1
+            }
+        },
+        State {
+            name: "disabled"
+            PropertyChanges {
+                target: mainButton
+                enabled: false
+                opacity: 0.1
+            }
+            PropertyChanges {
+                target: volumeSlider
+                enabled: false
+                opacity: 0.1
+                style: touchStyle_disabled
+            }
+            PropertyChanges {
+                target: panSlider
+                enabled: false
+                opacity: 0.1
+            }
+            PropertyChanges {
+                target: muteButton
+                enabled: false
+                opacity: 0.1
+            }
+            PropertyChanges {
+                target: soloButton
+                enabled: false
+                opacity: 0.1
+            }
+        }
+    ]
 
     signal volumeChanged(int volume, int channel)
     signal panChanged(int pan, int channel)
@@ -46,13 +101,26 @@ Item {
         onClicked: trackController.toggle(trackController.trackID)
         Component.onCompleted: mainButton.style = bt_out
         onCheckedChanged: mainButton.checked ? mainButton.style = bt_in : mainButton.style = bt_out
+        MultiPointTouchArea {
+            anchors.fill: parent
+            mouseEnabled: false
+            touchPoints: TouchPoint {
+                id: tp1
+                //TODO check if this is necessary
+//                onPressedChanged: {
+//                    if(pressed)
+//                        mainButton.checked = !mainButton.checked
+//                }
+            }
+        }
         Text {
             id: nomPiste
             anchors.centerIn: parent
             width: parent.width - 3
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: app.trackList.length > trackController.trackID ? app.trackList[trackController.trackID] : ""
+            text: app.trackList.length
+                  > trackController.trackID ? app.trackList[trackController.trackID] : ""
         }
     }
 
@@ -94,7 +162,6 @@ Item {
         }
     }
 
-
     //Pan Slider
     Slider {
         id: panSlider
@@ -135,7 +202,7 @@ Item {
     Item {
         id: buttons
         width: 100
-        height: 30
+        height: 40
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         //Mute
@@ -145,8 +212,8 @@ Item {
             x: 0
             id: muteButton
             objectName: "MuteButton"
-            width: 50
-            height: 30
+            width: parent.width/2
+            height: parent.height
             checkable: true
             style: muteStyle
             onClicked: trackController.mute(trackController.trackID,
@@ -156,49 +223,28 @@ Item {
         Button {
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
-            x: 50
             id: soloButton
             objectName: "SoloButton"
-            width: 50
-            height: 30
+            width: parent.width/2
+            height: parent.height
             checkable: true
             style: soloStyle
+            Item {
+                anchors.fill: parent
+                anchors.margins: 4
+
+                Image {
+                    anchors.fill: parent
+                    source: "images/ic_hearing_white_48dp.png"
+                    fillMode: Image.PreserveAspectFit
+                }
+            }
+
+
             onClicked: trackController.solo(trackController.trackID,
                                             soloButton.checked)
             onCheckedChanged: soloMode(trackController.trackID)
         }
-    }
-
-    function enable() {
-        mainButton.enabled = true
-        mainButton.opacity = 1
-        volumeSlider.enabled = true
-        volumeSlider.opacity = 1
-        volumeSlider.style = touchStyle
-        panSlider.enabled = true
-        panSlider.opacity = 1
-        muteButton.enabled = true
-        muteButton.opacity = 1
-        soloButton.enabled = true
-        soloButton.opacity = 1
-    }
-    function disable() {
-        mainButton.enabled = false
-        mainButton.opacity = 0.1
-        mainButton.text = ""
-        volumeSlider.enabled = false
-        volumeSlider.opacity = 0.1
-        volumeSlider.style = touchStyle_disabled
-        panSlider.enabled = false
-        panSlider.opacity = 0.1
-        muteButton.enabled = false
-        muteButton.opacity = 0.1
-        soloButton.enabled = false
-        soloButton.opacity = 0.1
-    }
-
-    function getChecked() {
-        return mainButton.checked
     }
     function getMute() {
         return muteButton.checked
@@ -210,9 +256,6 @@ Item {
         return soloButton.checked
     }
 
-    function changeActive() {
-        mainButton.checked = !mainButton.checked
-    }
     function changeMute() {
         muteButton.checked = !muteButton.checked
     }
@@ -230,15 +273,6 @@ Item {
             volumeSlider.style = touchStyle
         }
     }
-    function changeVolume(val) {
-        volumeSlider.value = val
-    }
-    function changePan(val) {
-        panSlider.value = val
-    }
-    function changeText(txt) {
-        nomPiste.text = txt
-    }
 
     function resetPiste() {
         mainButton.checked = false
@@ -246,7 +280,215 @@ Item {
         muteButton.enabled = true
         soloButton.checked = false
         volumeSlider.style = touchStyle
-        changeVolume(50)
-        changePan(0)
+        volumeSlider.value = 50
+        panSlider.value = 0;
     }
+
+    /************************************************/
+    /*                                              */
+    /*                  StyleSheet                  */
+    /*                                              */
+    /************************************************/
+
+    //styles boutons enable
+    Component {
+        id: bt_in
+        ButtonStyle {
+            background: Rectangle {
+                radius: 3
+                border.color: "black"
+                border.width: 2
+                color: "green"
+            }
+        }
+    }
+    //styles boutons disable
+    Component {
+        id: bt_out
+        ButtonStyle {
+            background: Rectangle {
+                radius: 3
+                border.color: "black"
+                border.width: 2
+                color: "gray"
+            }
+        }
+    }
+    //style slider volume
+    Component {
+        id: touchStyle
+        SliderStyle {
+            handle: Rectangle {
+                border.color: "black"
+                border.width: 2
+                width: 30
+                height: 60
+                radius: 3
+                antialiasing: true
+                color: "darkgray"
+            }
+
+            groove: Item {
+                implicitHeight: 60
+                implicitWidth: 350
+                Rectangle {
+                    height: 60
+                    width: parent.width
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: "darkslategray"
+                    opacity: 0.8
+                    radius: 3
+                    border.color: "black"
+                    border.width: 2
+                    Rectangle {
+                        antialiasing: true
+                        radius: 3
+                        border.color: "black"
+                        border.width: 2
+                        height: parent.height
+                        width: parent.width * control.value / control.maximumValue
+                        color: "darkgreen"
+                    }
+                }
+            }
+        }
+    }
+    //style slider volume_solo
+    Component {
+        id: touchStyle_solo
+        SliderStyle {
+            handle: Rectangle {
+                border.color: "black"
+                border.width: 2
+                width: 30
+                height: 60
+                radius: 3
+                antialiasing: true
+                color: "darkgray"
+            }
+
+            groove: Item {
+                implicitHeight: 60
+                implicitWidth: 350
+                Rectangle {
+                    height: 60
+                    width: parent.width
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: "darkslategray"
+                    opacity: 0.8
+                    radius: 3
+                    border.color: "black"
+                    border.width: 2
+                    Rectangle {
+                        antialiasing: true
+                        radius: 3
+                        border.color: "black"
+                        border.width: 2
+                        height: parent.height
+                        width: parent.width * control.value / control.maximumValue
+                        color: "yellow"
+                    }
+                }
+            }
+        }
+    }
+    //style slider volume_disabled
+    Component {
+        id: touchStyle_disabled
+        SliderStyle {
+            handle: Rectangle {
+                width: 30
+                height: 60
+                radius: 3
+                antialiasing: true
+                color: "darkslategray"
+            }
+
+            groove: Item {
+                implicitHeight: 60
+                implicitWidth: 350
+                Rectangle {
+                    height: 60
+                    width: parent.width
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: "darkslategray"
+                    opacity: 0.1
+                    radius: 3
+                    border.color: "black"
+                    border.width: 2
+                    Rectangle {
+                        antialiasing: true
+                        radius: 3
+                        border.color: "black"
+                        border.width: 2
+                        height: parent.height
+                        width: parent.width * control.value / control.maximumValue
+                        color: "darkgreen"
+                    }
+                }
+            }
+        }
+    }
+    //style slider panoramique
+    Component {
+        id: panStyle
+        SliderStyle {
+            groove: Rectangle {
+                implicitWidth: 100
+                implicitHeight: 30
+                color: "darkslategray"
+                border.color: "black"
+                border.width: 2
+                radius: 3
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "L      |      R"
+                    color: "black"
+                }
+            }
+            handle: Rectangle {
+                anchors.centerIn: parent
+                color: "darkgray"
+                border.color: "black"
+                border.width: 2
+                width: 20
+                height: 30
+                radius: 3
+            }
+        }
+    }
+    //style mute/solo
+    Component {
+        id: muteStyle
+        ButtonStyle {
+            background: Rectangle {
+                id: bg
+                color: control.checked ? "darkblue" : "darkgray"
+                border.color: "black"
+                border.width: 2
+                radius: 3
+                Text {
+                    text: qsTr("M")
+                    color: "black"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+    }
+    //style solo
+    Component {
+        id: soloStyle
+        ButtonStyle {
+            background: Rectangle {
+                id: bg
+                color: control.checked ? "yellow" : "darkgray"
+                border.color: "black"
+                border.width: 2
+                radius: 3
+            }
+        }
+    }
+
 }

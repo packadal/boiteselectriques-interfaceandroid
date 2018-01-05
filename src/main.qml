@@ -1,9 +1,9 @@
 import QtQuick 2.3
-import QtQuick.Controls 1.2
-import QtQuick.Layouts 1.1
-import QtQuick.Controls.Styles 1.2
-import QtQuick.Dialogs 1.2
+import QtQuick.Controls 2.3
+import QtQuick.Layouts 1.3
+import QtQuick.Dialogs 1.3
 import QtQuick.Window 2.2
+import QtQuick.Controls.Material 2.1
 
 ApplicationWindow {
     id: root
@@ -13,6 +13,8 @@ ApplicationWindow {
     title: qsTr("Les Boîtes Electriques")
     color: "#212126"
 
+    Material.accent: Material.Green
+
     property int nbPistesTotal: 8
 
     /************************************************/
@@ -20,12 +22,6 @@ ApplicationWindow {
     /*                   Fonctions                  */
     /*                                              */
     /************************************************/
-    //Fonctions de chargement
-    function showLoading() {
-        songSelector.visible = false
-        loading_indicator.visible = true
-        mixing_panel.visible = false
-    }
 
     StateGroup {
         id: windowStates
@@ -110,7 +106,6 @@ ApplicationWindow {
         ]
     }
 
-
     //Renvoie l'id de la piste i
     function idPiste(i) {
         switch (i) {
@@ -164,7 +159,8 @@ ApplicationWindow {
     }
     //Si appuie sur reset
     function doReset() {
-        reset.doReset()
+        app.reset()
+        app.resetThreshold()
         volumeMasterSlider.value = 50
         for (var i = 0; i < nbPistesTotal; i++)
             idPiste(i).resetPiste()
@@ -174,14 +170,13 @@ ApplicationWindow {
         return value | 0
     }
 
-    function loadingFinished(isFinished)
-    {
-        if(isFinished)
-            windowStates.state = "mixing";
+    function loadingFinished(isFinished) {
+        if (isFinished)
+            windowStates.state = "mixing"
     }
 
     Component.onCompleted: {
-        app.sync();
+        app.sync()
 
         app.onUpdateReady.connect(root.loadingFinished)
     }
@@ -193,7 +188,6 @@ ApplicationWindow {
     /************************************************/
     Rectangle {
         id: menu
-        objectName: "Liste"
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -222,14 +216,29 @@ ApplicationWindow {
         // Reset
         Button {
             id: reload
-            objectName: "Reload"
             anchors.left: title.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            checkable: false
             onClicked: app.sync()
-            style: style_reload
-            iconSource: "qrc:///images/ic_refresh_white_48dp.png"
+            width: reloadIcon.implicitWidth
+            focusPolicy: Qt.NoFocus
+            Image {
+                id: reloadIcon
+                anchors.fill: parent
+                source: "images/ic_refresh_white_48dp.png"
+            }
+
+            flat: true
+            display: AbstractButton.TextBesideIcon
+
+            background: Rectangle {
+                radius: 3
+                border.color: "black"
+                border.width: 2
+                implicitWidth: 80
+                implicitHeight: 50
+                color: reload.pressed ? "darkgray" : "black"
+            }
         }
 
         Item {
@@ -255,12 +264,11 @@ ApplicationWindow {
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: windowStates.state = "selecting";
+                onClicked: windowStates.state = "selecting"
             }
         }
 
         Text {
-            objectName: "threshold"
             id: threshold_value
 
             anchors.right: quit.left
@@ -337,18 +345,15 @@ ApplicationWindow {
 
                 Repeater {
                     model: app.songList
-                    delegate:
-                        Button {
+                    delegate: Button {
                         text: modelData
-                        style: simpleButtonStyle
                         onClicked: {
-                            doReset();
-                            changeSong.text = modelData;
-                            windowStates.state = "loading";
-                            app.selectSong(modelData);
+                            doReset()
+                            changeSong.text = modelData
+                            windowStates.state = "loading"
+                            app.selectSong(modelData)
                         }
-                        //TODO use long press to delete
-                        // using MouseArea pressAndHold
+                        onPressAndHold: app.deleteSong(modelData)
                     }
                 }
             }
@@ -358,7 +363,7 @@ ApplicationWindow {
                 anchors.bottomMargin: 16
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Cancel"
-                onClicked: windowStates.state = "mixing";
+                onClicked: windowStates.state = "mixing"
             }
         }
 
@@ -381,19 +386,17 @@ ApplicationWindow {
                     focus: true
                     id: new_threshold
                     stepSize: 1
-                    tickmarksEnabled: true
-                    objectName: "New_threshold"
+                    snapMode: Slider.NoSnap
                     orientation: Qt.Horizontal
                     smooth: true
                     implicitHeight: 50
                     implicitWidth: 600
-                    minimumValue: 0
-                    maximumValue: 99
+                    from: 0
+                    to: 99
                     value: app.threshold
-                    onValueChanged: app.threshold = new_threshold.value
-                    style: touchStyle_threshold
                     Text {
-                        anchors.centerIn: parent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.bottom
                         text: new_threshold.value
                         color: "white"
                     }
@@ -401,7 +404,10 @@ ApplicationWindow {
 
                 Button {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    onClicked: windowStates.state = "mixing"
+                    onClicked: {
+                        app.threshold = new_threshold.value
+                        windowStates.state = "mixing"
+                    }
                     text: qsTr("Valider")
                 }
             }
@@ -422,55 +428,46 @@ ApplicationWindow {
                 anchors.bottomMargin: 32
 
                 id: pisteControllers
-                objectName: "PisteControllers"
 
                 PisteController {
                     id: piste0
                     trackID: 0
                     checked: app.channel0
-                    objectName: "Piste0"
                 }
                 PisteController {
                     id: piste1
                     trackID: 1
                     checked: app.channel1
-                    objectName: "Piste1"
                 }
                 PisteController {
                     id: piste2
                     trackID: 2
                     checked: app.channel2
-                    objectName: "Piste2"
                 }
                 PisteController {
                     id: piste3
                     trackID: 3
                     checked: app.channel3
-                    objectName: "Piste3"
                 }
                 PisteController {
                     id: piste4
                     trackID: 4
                     checked: app.channel4
-                    objectName: "Piste4"
                 }
                 PisteController {
                     id: piste5
                     trackID: 5
                     checked: app.channel5
-                    objectName: "Piste5"
                 }
                 PisteController {
                     id: piste6
                     trackID: 6
                     checked: app.channel6
-                    objectName: "Piste6"
                 }
                 PisteController {
                     id: piste7
                     trackID: 7
                     checked: app.channel7
-                    objectName: "Piste7"
                 }
             }
 
@@ -535,7 +532,7 @@ ApplicationWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 100
                     height: 60
-                    style: simpleButtonStyle
+                    flat: true
                     onClicked: app.playing ? app.stop() : app.play()
                     Image {
                         source: app.playing ? "qrc:///images/ic_stop_white_48dp.png" : "qrc:///images/ic_play_arrow_white_48dp.png"
@@ -546,22 +543,20 @@ ApplicationWindow {
 
                 //Master
                 Slider {
-                    id: volumeMasterSlider
+                    id: masterVolumeSlider
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: play.right
                     anchors.leftMargin: 32
                     anchors.right: reset.left
                     anchors.rightMargin: 32
                     focus: true
-                    objectName: "VolumeMasterSlider"
                     orientation: Qt.Horizontal
                     smooth: true
                     Layout.minimumHeight: 800
-                    minimumValue: 0
-                    maximumValue: 100
+                    from: 0
+                    to: 100
                     value: 50
                     property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
-                    style: touchStyle_master
                     onValueChanged: app.masterVolume(volumeMasterSlider.value)
                     MouseArea {
                         id: volumeMasterSliderMouse
@@ -583,361 +578,17 @@ ApplicationWindow {
 
                 Button {
                     id: reset
-
-                    function doReset() {
-                        app.reset()
-                        app.resetThreshold()
-                    }
-
+                    flat: true
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
-
-                    objectName: "Reset"
-                    text: "Reset"
                     width: 100
                     height: 60
-                    checkable: true
-                    onClicked: reset()
-
-                    style: simpleButtonStyle
-                }
-            }
-        }
-    }
-    /************************************************/
-    /*                                              */
-    /*                  StyleSheet                  */
-    /*                                              */
-    /************************************************/
-    //styles toolbar
-    Component {
-        id: style_combobox
-        ComboBoxStyle {
-            background: Rectangle {
-                color: "black"
-                width: select_titre.width
-                height: select_titre.height
-            }
-            label: Item {
-                anchors.fill: parent
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.margins: 5
-                    font.pointSize: 20
-                    color: "darkgreen"
-                    text: control.currentText
-                }
-            }
-        }
-    }
-    //styles boutons enable
-    Component {
-        id: bt_in
-        ButtonStyle {
-            background: Rectangle {
-                radius: 3
-                border.color: "black"
-                border.width: 2
-                color: "green"
-            }
-        }
-    }
-    //styles boutons disable
-    Component {
-        id: bt_out
-        ButtonStyle {
-            background: Rectangle {
-                radius: 3
-                border.color: "black"
-                border.width: 2
-                color: "gray"
-            }
-        }
-    }
-    //style slider volume
-    Component {
-        id: touchStyle
-        SliderStyle {
-            handle: Rectangle {
-                border.color: "black"
-                border.width: 2
-                width: 30
-                height: 60
-                radius: 3
-                antialiasing: true
-                color: "darkgray"
-            }
-
-            groove: Item {
-                implicitHeight: 60
-                implicitWidth: 350
-                Rectangle {
-                    height: 60
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "darkslategray"
-                    opacity: 0.8
-                    radius: 3
-                    border.color: "black"
-                    border.width: 2
-                    Rectangle {
-                        antialiasing: true
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        height: parent.height
-                        width: parent.width * control.value / control.maximumValue
-                        color: "darkgreen"
+                    onClicked: root.doReset()
+                    Image {
+                        source: "images/ic_refresh_white_48dp.png"
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
                     }
-                }
-            }
-        }
-    }
-    //style slider volume_solo
-    Component {
-        id: touchStyle_solo
-        SliderStyle {
-            handle: Rectangle {
-                border.color: "black"
-                border.width: 2
-                width: 30
-                height: 60
-                radius: 3
-                antialiasing: true
-                color: "darkgray"
-            }
-
-            groove: Item {
-                implicitHeight: 60
-                implicitWidth: 350
-                Rectangle {
-                    height: 60
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "darkslategray"
-                    opacity: 0.8
-                    radius: 3
-                    border.color: "black"
-                    border.width: 2
-                    Rectangle {
-                        antialiasing: true
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        height: parent.height
-                        width: parent.width * control.value / control.maximumValue
-                        color: "yellow"
-                    }
-                }
-            }
-        }
-    }
-    //style slider volume_disabled
-    Component {
-        id: touchStyle_disabled
-        SliderStyle {
-            handle: Rectangle {
-                width: 30
-                height: 60
-                radius: 3
-                antialiasing: true
-                color: "darkslategray"
-            }
-
-            groove: Item {
-                implicitHeight: 60
-                implicitWidth: 350
-                Rectangle {
-                    height: 60
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "darkslategray"
-                    opacity: 0.1
-                    radius: 3
-                    border.color: "black"
-                    border.width: 2
-                    Rectangle {
-                        antialiasing: true
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        height: parent.height
-                        width: parent.width * control.value / control.maximumValue
-                        color: "darkgreen"
-                    }
-                }
-            }
-        }
-    }
-    //style slider panoramique
-    Component {
-        id: panStyle
-        SliderStyle {
-            groove: Rectangle {
-                implicitWidth: 100
-                implicitHeight: 30
-                color: "darkslategray"
-                border.color: "black"
-                border.width: 2
-                radius: 3
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "L      |      R"
-                    color: "black"
-                }
-            }
-            handle: Rectangle {
-                anchors.centerIn: parent
-                color: "darkgray"
-                border.color: "black"
-                border.width: 2
-                width: 20
-                height: 30
-                radius: 3
-            }
-        }
-    }
-    //style mute/solo
-    Component {
-        id: muteStyle
-        ButtonStyle {
-            background: Rectangle {
-                id: bg
-                color: control.checked ? "darkblue" : "darkgray"
-                border.color: "black"
-                border.width: 2
-                radius: 3
-                Text {
-                    text: qsTr("M")
-                    color: "black"
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
-    }
-    //style solo
-    Component {
-        id: soloStyle
-        ButtonStyle {
-            background: Rectangle {
-                id: bg
-                color: control.checked ? "yellow" : "darkgray"
-                border.color: "black"
-                border.width: 2
-                radius: 3
-                Text {
-                    text: qsTr("S")
-                    color: "black"
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
-    }
-    //style master volume
-    Component {
-        id: touchStyle_master
-        SliderStyle {
-            handle: Rectangle {
-                border.color: "black"
-                border.width: 2
-                width: 30
-                height: 60
-                radius: 3
-                antialiasing: true
-                color: "darkgray"
-            }
-            groove: Item {
-                implicitHeight: 60
-                implicitWidth: 900
-                Rectangle {
-                    height: 60
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "darkslategray"
-                    opacity: 0.8
-                    radius: 3
-                    border.color: "black"
-                    border.width: 2
-                    Rectangle {
-                        id: testing
-                        antialiasing: true
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        height: parent.height
-                        width: parent.width * control.value / control.maximumValue
-                        color: "darkgreen"
-                    }
-                }
-            }
-        }
-    }
-    //style threshold volume
-    Component {
-        id: touchStyle_threshold
-        SliderStyle {
-            handle: Rectangle {
-                border.color: "black"
-                border.width: 2
-                width: 30
-                height: 40
-                radius: 3
-                antialiasing: true
-                color: "darkgray"
-            }
-            groove: Item {
-                implicitHeight: 40
-                implicitWidth: 600
-                Rectangle {
-                    height: 40
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "darkslategray"
-                    opacity: 0.8
-                    radius: 3
-                    border.color: "black"
-                    border.width: 2
-                    Rectangle {
-                        antialiasing: true
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        height: parent.height
-                        width: parent.width * control.value / control.maximumValue
-                        color: "darkgreen"
-                    }
-                }
-            }
-        }
-    }
-
-    Component {
-        id: style_reload
-        ButtonStyle {
-            background: Rectangle {
-                radius: 3
-                border.color: "black"
-                border.width: 2
-                color: control.pressed ? "darkgray" : "black"
-            }
-        }
-    }
-    //styles boutons reset
-    Component {
-        id: simpleButtonStyle
-        ButtonStyle {
-            background: Rectangle {
-                radius: 3
-                border.color: "black"
-                border.width: 2
-                color: control.pressed ? "black" : "darkgray"
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }

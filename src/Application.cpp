@@ -92,6 +92,11 @@ void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
   ready(go);
 }
 
+void Application::deleteSong(const QString& songName) {
+  m_sender.send(
+      osc::MessageGenerator()("/box/delete_song", songName.toUtf8().data()));
+}
+
 void Application::syncBox(int val) {
   for (int i = 0; i < 8; ++i) {
     // this creates an integer with only one bit enabled, which is the i-th one,
@@ -151,7 +156,7 @@ void Application::reset() {
 }
 
 void Application::resetThreshold() {
-  m_sender.send(osc::MessageGenerator()("/box/reset_threshold", true));
+  m_sender.send(osc::MessageGenerator()("/box/reset_threshold", 0));
 }
 
 void Application::refreshSong() {

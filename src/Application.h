@@ -103,6 +103,13 @@ class Application : public QObject {
    *******************/
 
   /**
+   * @brief delete a song on the server machine
+   * this will physically remove the file
+   * @param songName the name of the song to delete
+   */
+  void deleteSong(const QString& songName);
+
+  /**
    * @brief Update the server's threshold value
    * @param thresh New threshold value
    *
