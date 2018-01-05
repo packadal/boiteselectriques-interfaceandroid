@@ -6,6 +6,7 @@ import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.2
 
 ApplicationWindow {
+    id: root
     visible: true
     width: 1440
     height: 1024
@@ -82,7 +83,7 @@ ApplicationWindow {
     }
     //Si appuie sur reset
     function doReset() {
-        reset.ifclicked()
+        reset.doReset()
         volumeMasterSlider.value = 50
         for (var i = 0; i < nbPistesTotal; i++)
             idPiste(i).resetPiste()
@@ -114,273 +115,204 @@ ApplicationWindow {
         return value | 0
     }
 
-
     /************************************************/
     MessageDialog {
         id: about
-        signal ifclicked ()
         objectName: "About"
         title: "A propos"
         text: "Copyright Rock & Chanson 2015\nVersion: b3.0"
         Component.onCompleted: visible = true
         onAccepted: {
-            about.ifclicked();
+            app.refreshSong();
             select_titre.visible=true;
             select_titre.activeFocusOnPress=true;
         }
      }
 
-    ColumnLayout {
-        anchors.fill: parent
+    /************************************************/
+    /*                                              */
+    /*                    Le menu                   */
+    /*                                              */
+    /************************************************/
+    Rectangle {
+        id: menu
+        objectName: "Liste"
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 60
+        color: "black"
 
-        /************************************************/
-        /*                                              */
-        /*                    Le menu                   */
-        /*                                              */
-        /************************************************/
-        Rectangle {
-            anchors.top: parent.top
+        Image {
+            id: logo
             anchors.left: parent.left
-            anchors.right: parent.right
-            height: 60
-            id: menu
-            color: "red"
+            anchors.leftMargin: 32
+            anchors.verticalCenter: parent.verticalCenter
+            source: "qrc:///images/logo_80.png"
+            smooth: true
+            sourceSize.width: 56
+            sourceSize.height: 56
+        }
 
-            //Logo
-            Image {
-                anchors.left: parent.left
-                anchors.leftMargin: 32
-                anchors.verticalCenter: parent.verticalCenter
-                source: "qrc:///images/logo_80.png"
-                smooth: true
-                sourceSize.width: 56
-                sourceSize.height: 56
-            }
+        Text {
+            id: title
+            anchors.left: logo.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: qsTr("Les Boîtes Electriques")
+            color: "white"
+        }
 
-            //Titre :
-            Rectangle {
-                color: "transparent"
-                width: 300
-                height: 60
-                x: 350
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Titre :")
-                    color: "white"
+        // Reset
+        Button {
+            id: reload
+            objectName: "Reload"
+            anchors.right: select_titre.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            checkable: false
+            onClicked: app.sync()
+            style: style_reload
+            iconSource: "qrc:///images/ic_refresh_white_48dp.png"
+        }
+
+        // Song List
+        ComboBox {
+            id: select_titre
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            objectName: "Select_song"
+            //                visible: false
+            focus: true
+            width: 300
+            height: parent.height
+            style: style_combobox
+            model: ListModel {
+                id: cbitems
+                ListElement {
+                    text: "Choisir un titre"
+                    link: ""
                 }
             }
-
-            //Les Boîtes Electriques
-            Rectangle {
-                width: 200
-                height: 60
-                x: 90
-                color: "transparent"
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: appname
-                    text: qsTr("Les Boîtes Electriques")
-                    color: "white"
-                }
-            }
-
-            //Liste chansons
-            Rectangle {
-                id: rliste
-                objectName: "Liste"
-                color: "transparent"
-                width: 300
-                height: 56
-                x: 500
-                y: 1
-                ComboBox {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: select_titre
-                    signal ifselect(string song)
-                    objectName: "Select_song"
-                    visible: false
-                    focus: true
-                    width: 250
-                    height: 56
-                    style: style_combobox
-                    model: ListModel {
-                        id: cbitems
-                        ListElement {
-                            text: "Choisir un titre"
-                            link: ""
-                        }
-                    }
-                    onCurrentIndexChanged: {
-                        if (cbitems.get(currentIndex).link != "") {
-                            showLoading()
-                            doReset()
-                            select_titre.ifselect(cbitems.get(
-                                                      currentIndex).link)
-                        }
-                    }
-                }
-                function aff_liste(liste) {
+            onCurrentIndexChanged: {
+                if (cbitems.get(currentIndex).link != "") {
+                    showLoading()
                     doReset()
-                    cbitems.clear()
-                    cbitems.append({
-                                       text: "Choisir un titre",
-                                       link: ""
-                                   })
-                    var aff = liste.split("|")
-                    for (var i = 0; i < aff.length; i++) {
-                        var aff2 = aff[i].split(".song")
-                        cbitems.append({
-                                           text: aff2[0],
-                                           link: aff[i]
-                                       })
-                    }
-                }
-            }
-
-            //Sensibilité
-            Rectangle {
-                id: threshold
-                objectName: "threshold"
-                color: "transparent"
-                width: 200
-                height: 60
-                x: 850
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: threshold_value
-                    text: qsTr("Sensibilité :")
-                    color: "white"
-                }
-                function aff_threshold(sensor) {
-                    var aff_t = sensor
-                    threshold_value.text = qsTr("Sensibilité: " + aff_t)
-                    new_threshold.value = aff_t
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        item_threshold.visible = true
-                    }
-                }
-            }
-
-            // Reset
-            Button {
-                id: reload
-                objectName: "Reload"
-                width: 40
-                height: 50
-                x: 425
-                y: 5
-                checkable: false
-                onClicked: app.refreshSong()
-                style: style_reload
-                //                    onPressedChanged: reload.ifclicked()
-                Image {
-                    source: "qrc:///images/ic_refresh_white_48dp.png"
-                    anchors.fill: parent
-                    fillMode: Image.PreserveAspectFit
-                }
-            }
-
-            //Quitter
-            Rectangle {
-                color: "transparent"
-                width: 200
-                height: 60
-                x: 1100
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    id: quit
-                    text: qsTr("Quitter")
-                    color: "white"
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        doReset()
-                        Qt.quit()
-                    }
+                    app.selectSong(cbitems.get(currentIndex).link)
                 }
             }
         }
+        function aff_liste(liste) {
+            doReset()
+            cbitems.clear()
+            cbitems.append({
+                               text: "Choisir un titre",
+                               link: ""
+                           })
+            var aff = liste.split("|")
+            for (var i = 0; i < aff.length; i++) {
+                var aff2 = aff[i].split(".song")
+                cbitems.append({
+                                   text: aff2[0],
+                                   link: aff[i]
+                               })
+            }
+        }
 
-        /************************************************/
-        /*                                              */
-        /*                  La console                  */
-        /*                                              */
-        /************************************************/
-        //Chargement en cours...
-        Item {
-            width: 1280
-            height: 750
+        Text {
+            objectName: "threshold"
+            id: threshold_value
+
+            anchors.right: quit.left
+            anchors.rightMargin: 32
+
+            anchors.verticalCenter: parent.verticalCenter
+            text: qsTr("Sensibilité :")
+            color: "white"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    item_threshold.visible = true
+                }
+            }
+            function aff_threshold(sensor) {
+                var aff_t = sensor
+                threshold_value.text = qsTr("Sensibilité: " + aff_t)
+                new_threshold.value = aff_t
+            }
+        }
+
+        Text {
+            id: quit
+            anchors.right: parent.right
+            anchors.rightMargin: 32
+            anchors.verticalCenter: parent.verticalCenter
+            text: qsTr("Quitter")
+            color: "white"
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    doReset()
+                    Qt.quit()
+                }
+            }
+        }
+    }
+
+    /************************************************/
+    /*                                              */
+    /*                  La console                  */
+    /*                                              */
+    /************************************************/
+    Item {
+        anchors.top: menu.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        //Loading indicator
+        Text {
             id: item_preload
             visible: false
-            Rectangle {
-                color: "transparent"
-                width: 200
-                height: 100
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Chargement en cours...")
-                    color: "white"
-                    ColorAnimation on color {
-                        from: "white"
-                        to: "red"
-                        duration: 3000
-                    }
+            anchors.centerIn: parent
+            text: qsTr("Chargement en cours...")
+            color: "white"
+            SequentialAnimation on color {
+                loops: Animation.Infinite
+                ColorAnimation {
+                    from: "white"
+                    to: "red"
+                    duration: 1000
+                }
+                ColorAnimation {
+                    from: "red"
+                    to: "white"
+                    duration: 1000
                 }
             }
         }
 
         //Sensibilité
         Item {
-            width: 1280
-            height: 750
+            anchors.fill: parent
             id: item_threshold
             visible: false
 
-            //Texte
-            Rectangle {
-                id: rect1
-                color: "transparent"
-                width: 690
-                height: 50
-                y: 200
-                anchors.horizontalCenter: parent.horizontalCenter
+            ColumnLayout {
+                spacing: 32
+                anchors.centerIn: parent
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Réglage de la sensibilité")
                     color: "white"
                 }
-            }
 
-            //Barre de réglage
-            Rectangle {
-                id: rect2
-                width: 610
-                height: 60
-                color: "transparent"
-                anchors.top: rect1.bottom
-                anchors.topMargin: 5
-                anchors.left: rect1.left
+                //Barre de réglage
                 Slider {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
                     focus: true
                     id: new_threshold
                     stepSize: 1
                     tickmarksEnabled: true
-                    signal thresholdChanged(int val)
                     objectName: "New_threshold"
                     orientation: Qt.Horizontal
                     smooth: true
@@ -390,47 +322,23 @@ ApplicationWindow {
                     maximumValue: 99
                     value: 0
                     style: touchStyle_threshold
-                    onValueChanged: new_threshold.thresholdChanged(
+                    onValueChanged: app.updateThreshold(
                                         new_threshold.value)
+                    Text {
+                        anchors.centerIn: parent
+                        text: new_threshold.value
+                        color: "white"
+                    }
                 }
-            }
 
-            //Affiche valeur sensibilité
-            Rectangle {
-                id: rect3
-                width: 60
-                height: 60
-                color: "transparent"
-                anchors.left: rect2.right
-                anchors.leftMargin: 15
-                anchors.top: rect1.bottom
-                anchors.topMargin: 5
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: new_threshold.value
-                    color: "white"
-                }
-            }
-
-            //Bouton validé ?
-            Rectangle {
-                id: rect4
-                width: 150
-                height: 60
-                color: "transparent"
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: rect3.bottom
-                anchors.topMargin: 5
                 Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
                     onClicked: {
                         item_threshold.visible = false
                         threshold_value.text = qsTr(
                                     "Sensibilité: " + new_threshold.value)
                     }
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Valider")
                 }
             }
@@ -438,168 +346,162 @@ ApplicationWindow {
 
         //Fenêtre principale
         Item {
-            width: 1280
-            height: 750
             id: mixwindow
-            //            visible: false
+            anchors.fill: parent
+            anchors.margins: 32
+            visible: false
 
             //Piste Controllers
-            Row {
-                spacing: 60
-                x: 50
-                y: 0
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: beatLine.top
+                anchors.bottomMargin: 32
+
                 id: pisteControllers
                 objectName: "PisteControllers"
 
                 PisteController {
                     id: piste0
-                    objectName: "Piste0"
-
                     trackID: 0
-
+                    checked: app.channel0
+                    objectName: "Piste0"
                 }
                 PisteController {
                     id: piste1
                     trackID: 1
+                    checked: app.channel1
                     objectName: "Piste1"
                 }
                 PisteController {
                     id: piste2
                     trackID: 2
+                    checked: app.channel2
                     objectName: "Piste2"
                 }
                 PisteController {
                     id: piste3
                     trackID: 3
+                    checked: app.channel3
                     objectName: "Piste3"
                 }
                 PisteController {
                     id: piste4
                     trackID: 4
+                    checked: app.channel4
                     objectName: "Piste4"
                 }
                 PisteController {
                     id: piste5
                     trackID: 5
+                    checked: app.channel5
                     objectName: "Piste5"
                 }
                 PisteController {
                     id: piste6
                     trackID: 6
+                    checked: app.channel6
                     objectName: "Piste6"
                 }
                 PisteController {
                     id: piste7
                     trackID: 7
+                    checked: app.channel7
                     objectName: "Piste7"
                 }
             }
 
             //Ligne Beat
-            Row {
-                spacing: 0
-                x: 30
-                y: 555
+            Item {
+                id: beatLine
 
-                //Position :
-                Rectangle {
-                    id: rtitle
-                    objectName: "Titre"
-                    width: 130
-                    height: 30
-                    color: "transparent"
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: title
-                        text: qsTr("Position :")
-                        color: "white"
-                    }
-                    //function aff_titre(titre){
-                    //title.text = titre
-                    //}
+                anchors.bottom: bottomLine.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 50
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: beatDisplay.left
+                    anchors.rightMargin: 32
+                    id: position
+                    text: qsTr("Position :")
+                    color: "white"
                 }
 
                 //Barre
-                Repeater {
-                    id: barre_mesure
-                    model: 32
-                    delegate: Rectangle {
-                        width: 30
-                        height: 30
-                        radius: 3
-                        border.color: "black"
-                        border.width: 2
-                        color: (index < app.beat) ? ((index % 4
-                                                      == 0) ? "black" : "green") : "transparent"
-                    }
-                }
-
-                //Compteur
-                Rectangle {
-                    id: beat
-                    objectName: "Beat"
-                    width: 100
-                    height: 30
-                    color: "transparent"
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        id: name
-                        text: app.beat + "/32"
-                        color: "white"
-                    }
-                }
-            }
-
-            //Ligne Play/Stop/Master/Reset
-            Row {
-                spacing: 10
-                x: 30
-                y: 600
-
-                //Play
-                Rectangle {
-                    width: 100
-                    height: 70
-                    color: "transparent"
-                    Button {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-                        id: play
-                        width: 100
-                        height: 60
-                        onClicked: app.playing ? app.stop() : app.play()
-                        Image {
-                            source: app.playing ? "qrc:///images/ic_stop_white_48dp.png" : "qrc:///images/ic_play_arrow_white_48dp.png"
-                            anchors.fill: parent
-                            fillMode: Image.PreserveAspectFit
+                Row {
+                    id: beatDisplay
+                    anchors.centerIn: parent
+                    Repeater {
+                        model: 32
+                        delegate: Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 3
+                            border.color: "black"
+                            border.width: 2
+                            color: (index < app.beat) ? ((index % 4
+                                                          == 0) ? "black" : "green") : "transparent"
                         }
                     }
                 }
 
-                //Master
-                Rectangle {
-                    width: 900
-                    height: 70
-                    color: "transparent"
-                    Slider {
-                        anchors.verticalCenter: parent.verticalCenter
-                        focus: true
-                        id: volumeMasterSlider
-                        signal volumeChanged(int val)
-                        objectName: "VolumeMasterSlider"
-                        orientation: Qt.Horizontal
-                        smooth: true
-                        Layout.minimumHeight: 800
-                        minimumValue: 0
-                        maximumValue: 100
-                        value: 50
-                        property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
-                        style: touchStyle_master
-                        onValueChanged: volumeMasterSlider.volumeChanged(
-                                            volumeMasterSlider.value)
+                Text {
+                    id: name
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: beatDisplay.right
+                    anchors.leftMargin: 32
+                    text: app.beat + "/32"
+                    color: "white"
+                }
+            }
+
+            //Ligne Play/Stop/Master/Reset
+            Item {
+                id: bottomLine
+
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 100
+
+                Button {
+                    id: play
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 100
+                    height: 60
+                    style:simpleButtonStyle
+                    onClicked: app.playing ? app.stop() : app.play()
+                    Image {
+                        source: app.playing ? "qrc:///images/ic_stop_white_48dp.png" : "qrc:///images/ic_play_arrow_white_48dp.png"
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
                     }
+                }
+
+                //Master
+                Slider {
+                    id: volumeMasterSlider
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: play.right
+                    anchors.leftMargin: 32
+                    anchors.right: reset.left
+                    anchors.rightMargin: 32
+                    focus: true
+                    objectName: "VolumeMasterSlider"
+                    orientation: Qt.Horizontal
+                    smooth: true
+                    Layout.minimumHeight: 800
+                    minimumValue: 0
+                    maximumValue: 100
+                    value: 50
+                    property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
+                    style: touchStyle_master
+                    onValueChanged: app.masterVolume(
+                                        volumeMasterSlider.value)
                     MouseArea {
                         id: volumeMasterSliderMouse
                         anchors.fill: parent
@@ -618,33 +520,29 @@ ApplicationWindow {
                     }
                 }
 
-                //Reset
-                Rectangle {
-                    width: 100
-                    height: 70
-                    color: "transparent"
-                    Button {
-                        id: reset
+                Button {
+                    id: reset
 
-                        signal ifclicked
-                        signal click
-
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        objectName: "Reset"
-                        text: "Reset"
-                        width: 100
-                        height: 60
-                        checkable: true
-                        onClicked: click() //doReset()
-                        style: simpleButtonStyle
+                    function doReset() {
+                        app.reset();
+                        app.resetThreshold();
                     }
+
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+
+                    objectName: "Reset"
+                    text: "Reset"
+                    width: 100
+                    height: 60
+                    checkable: true
+                    onClicked: reset()
+
+                    style: simpleButtonStyle
                 }
             }
         }
     }
-
     /************************************************/
     /*                                              */
     /*                  StyleSheet                  */
