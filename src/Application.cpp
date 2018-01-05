@@ -104,13 +104,15 @@ void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
 
 void Application::nextBeat(int beat) {
   m_beatsTimer.restart();
-  if (beat >= 0)
+  if (beat >= 0) {
     m_currentBeat = beat;
+  }
 
   emit updateBeat(++m_currentBeat);
   qDebug() << m_currentBeat;
-  if (m_currentBeat >= 32)
+  if (m_currentBeat >= 32) {
     m_currentBeat = 0;
+  }
 }
 
 void Application::playBeats(int tempo) {
@@ -124,9 +126,10 @@ void Application::playBeats(int tempo) {
     if (timeLeftToNext <= 0) {
       nextBeat(-1);
       m_beatsTimer = m_beatsTimer.addMSecs(-timeLeftToNext);
-    } else if (timeLeftToNext > 10)
+    } else if (timeLeftToNext > 10) {
       std::this_thread::sleep_for(
           std::chrono::milliseconds((int)timeLeftToNext * 99 / 100));
+    }
   }
   updateBeat(0);
 }
@@ -138,7 +141,7 @@ void Application::syncBox(int val) {
     const int mask = 1 << i;
     // this is a binary comparison that checks if val has the bit in the mask
     // set to true or false
-    setChannel(i, mask & val);
+    setChannel(i, (mask & val) != 0);
   }
 }
 QString Application::song() const {
