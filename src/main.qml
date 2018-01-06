@@ -161,7 +161,7 @@ ApplicationWindow {
     function doReset() {
         app.reset()
         app.resetThreshold()
-        volumeMasterSlider.value = 50
+        masterVolumeSlider.value = 50
         for (var i = 0; i < nbPistesTotal; i++)
             idPiste(i).resetPiste()
     }
@@ -394,6 +394,7 @@ ApplicationWindow {
                     from: 0
                     to: 99
                     value: app.threshold
+                    onValueChanged: app.updateThreshold(new_threshold.value)
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.bottom
@@ -405,7 +406,6 @@ ApplicationWindow {
                 Button {
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: {
-                        app.threshold = new_threshold.value
                         windowStates.state = "mixing"
                     }
                     text: qsTr("Valider")
@@ -555,23 +555,23 @@ ApplicationWindow {
                     Layout.minimumHeight: 800
                     from: 0
                     to: 100
-                    value: 50
+                    value: app.masterVolume
                     property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
-                    onValueChanged: app.masterVolume(volumeMasterSlider.value)
+                    onValueChanged: app.updateMasterVolume(masterVolumeSlider.value)
                     MouseArea {
-                        id: volumeMasterSliderMouse
+                        id: masterVolumeSliderMouse
                         anchors.fill: parent
                         onPressed: {
-                            volumeMasterSlider.value = float2int(
-                                        mouseX / volumeMasterSlider.width * 100)
-                            volumeMasterSlider.resetValue = false
+                            masterVolumeSlider.value = float2int(
+                                        mouseX / masterVolumeSlider.width * 100)
+                            masterVolumeSlider.resetValue = false
                         }
-                        onPositionChanged: if (volumeMasterSlider.resetValue == false)
-                                               volumeMasterSlider.value = float2int(
-                                                           mouseX / volumeMasterSlider.width * 100)
+                        onPositionChanged: if (masterVolumeSlider.resetValue == false)
+                                               masterVolumeSlider.value = float2int(
+                                                           mouseX / masterVolumeSlider.width * 100)
                         onDoubleClicked: {
-                            volumeMasterSlider.value = 50
-                            volumeMasterSlider.resetValue = true
+                            masterVolumeSlider.value = 50
+                            masterVolumeSlider.resetValue = true
                         }
                     }
                 }

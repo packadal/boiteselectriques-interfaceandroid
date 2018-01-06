@@ -27,6 +27,9 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler("/box/tracks_list",
                            std::bind(&Application::handle__box_tracksList, this,
                                      std::placeholders::_1));
+  m_oscReceiver.addHandler(
+      "/box/master",
+      std::bind(&Application::handle__box_master, this, std::placeholders::_1));
 
   m_oscReceiver.run();
 
@@ -92,6 +95,12 @@ void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
   ready(go);
 }
 
+void Application::handle__box_master(osc::ReceivedMessageArgumentStream args) {
+  osc::int32 master;
+  args >> master;
+  setMasterVolume(master);
+}
+
 void Application::deleteSong(const QString& songName) {
   m_sender.send(
       osc::MessageGenerator()("/box/delete_song", songName.toUtf8().data()));
@@ -145,7 +154,7 @@ void Application::stop() {
   setBeat(0);
 }
 
-void Application::masterVolume(int vol) {
+void Application::updateMasterVolume(int vol) {
   m_sender.send(osc::MessageGenerator()("/box/master", vol));
 }
 

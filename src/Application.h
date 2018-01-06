@@ -95,6 +95,11 @@ class Application : public QObject {
    * @param args Loading state (ready or not)
    */
   void handle__box_ready(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief master volume event handling
+   * @param args the master volume as an int between 0 an 100 included
+   */
+  void handle__box_master(osc::ReceivedMessageArgumentStream args);
 
  public slots:
 
@@ -173,7 +178,7 @@ class Application : public QObject {
    *
    * Send to the server the new master volume
    */
-  void masterVolume(int vol);
+  void updateMasterVolume(int vol);
   /**
    * @brief Reset the current song's settings on the server
    *
@@ -261,8 +266,11 @@ class Application : public QObject {
 
   Q_PROPERTY(
       int threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
+  Q_PROPERTY(int masterVolume READ masterVolume WRITE setMasterVolume NOTIFY
+                 masterVolumeChanged)
 
-  int m_threshold;
+  int m_masterVolume = 0;
+  int m_threshold = 49;
   QStringList m_songList = {};
   QStringList m_trackList = {};
   QString m_currentSongTitle = QString::null;
@@ -281,6 +289,14 @@ class Application : public QObject {
     if (title != m_currentSongTitle) {
       m_currentSongTitle = title;
       emit currentSongTitleChanged();
+    }
+  }
+
+  void setMasterVolume(int masterVolume) {
+    if (masterVolume != m_masterVolume) {
+      m_masterVolume = masterVolume;
+      emit masterVolumeChanged();
+      updateMasterVolume(m_masterVolume);
     }
   }
 
@@ -373,6 +389,7 @@ class Application : public QObject {
   }
 
  public:
+  int masterVolume() const { return m_masterVolume; }
   int threshold() const { return m_threshold; }
   QString currentSongTitle() const { return m_currentSongTitle; }
   bool isPlaying() const { return m_isPlaying; }
@@ -416,6 +433,7 @@ class Application : public QObject {
   void beatChanged();
   void thresholdChanged();
   void updateReady(bool);
+  void masterVolumeChanged();
 };
 
 #endif  // APPLICATION_H
