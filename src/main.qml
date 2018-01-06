@@ -394,7 +394,6 @@ ApplicationWindow {
                     from: 0
                     to: 99
                     value: app.threshold
-                    onValueChanged: app.updateThreshold(new_threshold.value)
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.bottom
@@ -406,6 +405,7 @@ ApplicationWindow {
                 Button {
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: {
+                        app.updateThreshold(new_threshold.value)
                         windowStates.state = "mixing"
                     }
                     text: qsTr("Valider")

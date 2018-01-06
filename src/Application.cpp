@@ -132,8 +132,8 @@ void Application::volume(int vol, int chan) {
   m_sender.send(osc::MessageGenerator()("/box/volume", chan, vol));
 }
 
-void Application::pan(int vol, int chan) {
-  m_sender.send(osc::MessageGenerator()("/box/pan", chan, vol));
+void Application::pan(int vol, int pan) {
+  m_sender.send(osc::MessageGenerator()("/box/pan", pan, vol));
 }
 
 void Application::mute(int chan, bool state) {
