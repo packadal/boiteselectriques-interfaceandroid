@@ -12,8 +12,11 @@
 #include "osc/oscreceiver.h"
 #include "osc/oscsender.h"
 
+#include "track.h"
+
 #include <QDebug>
 #include <QObject>
+#include <QQmlListProperty>
 #include <QTime>
 #include <chrono>
 #include <thread>
@@ -100,6 +103,32 @@ class Application : public QObject {
    * @param args the master volume as an int between 0 an 100 included
    */
   void handle__box_master(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief track volume event handling
+   * @param args the track and volume as an int between 0 an 100 included
+   */
+  void handle__box_volume(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief track pan event handling
+   * @param args the track and pan as an int between -100 an 100 included
+   */
+  void handle__box_pan(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief track mute event handling
+   * @param args the list of muted tracks as a int, where each bit indicates a
+   * track's status
+   */
+  void handle__box_mute(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief track solo event handling
+   * @param args the id of the track performing a solo
+   */
+  void handle__box_solo(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief playing event handling
+   * @param args wether the player is playing or stopped.
+   */
+  void handle__box_playing(osc::ReceivedMessageArgumentStream args);
 
  public slots:
 
@@ -121,45 +150,6 @@ class Application : public QObject {
    * Send to the server the new threshold value
    */
   void updateThreshold(int thresh);
-  /**
-   * @brief Toggle a track on the server
-   * @param chan Track id (number)
-   *
-   * Inform the server of a track's status toggling via the client
-   */
-  void button(int chan);
-  /**
-   * @brief Change a server track's volume
-   * @param vol New volume
-   * @param chan Track id (number)
-   *
-   * Send to the server the new volume of a track
-   */
-  void volume(int vol, int chan);
-  /**
-   * @brief Change a server track's pan
-   * @param vol New pan
-   * @param chan Track id (number)
-   *
-   * Send to the server the new pan of a track
-   */
-  void pan(int vol, int chan);
-  /**
-   * @brief Mute/Unmute a server's track
-   * @param chan Track id (number)
-   * @param state New mute state (mute = true, unmute = false)
-   *
-   * Send to the server the new mute state of a track
-   */
-  void mute(int chan, bool state);
-  /**
-   * @brief Solo/Unsolo a server's track
-   * @param chan Track id (number)
-   * @param state New solo state (solo=true, unsolo=false)
-   *
-   * Send to the server the new solo state of a track
-   */
-  void solo(int chan, bool state);
   /**
    * @brief Start the song
    *
@@ -216,18 +206,14 @@ class Application : public QObject {
    *******************/
 
   /**
-   * @brief Activate a client's track
-   * @param chan Track number
-   */
-  void setChannel(int chan, bool enabled);
-  /**
    * @brief Signals that the current song is loaded
    * @param go New ready state
    */
   void ready(bool go);
 
  private:
-  OscSender m_sender{"127.0.0.1", 9988};
+  std::shared_ptr<OscSender> m_sender =
+      std::make_shared<OscSender>("127.0.0.1", 9988);
   OscReceiver m_oscReceiver{9989};
 
   bool m_isPlaying{false};
@@ -236,33 +222,18 @@ class Application : public QObject {
 
   QString m_song{""};
 
-  void syncBox(int val);
-
  private:
   Q_PROPERTY(QString currentSongTitle READ currentSongTitle WRITE
                  setCurrentSongTitle NOTIFY currentSongTitleChanged)
   Q_PROPERTY(QStringList songList READ songList WRITE setSongList NOTIFY
                  songListChanged)
+
+  Q_PROPERTY(QQmlListProperty<Track> tracks READ tracks NOTIFY tracksChanged)
+
   Q_PROPERTY(QStringList trackList READ trackList WRITE setTrackList NOTIFY
                  trackListChanged)
   Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY beatChanged)
   Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
-  Q_PROPERTY(
-      bool channel0 READ channel0 WRITE setChannel0 NOTIFY channel0Changed)
-  Q_PROPERTY(
-      bool channel1 READ channel1 WRITE setChannel1 NOTIFY channel1Changed)
-  Q_PROPERTY(
-      bool channel2 READ channel2 WRITE setChannel2 NOTIFY channel2Changed)
-  Q_PROPERTY(
-      bool channel3 READ channel3 WRITE setChannel3 NOTIFY channel3Changed)
-  Q_PROPERTY(
-      bool channel4 READ channel4 WRITE setChannel4 NOTIFY channel4Changed)
-  Q_PROPERTY(
-      bool channel5 READ channel5 WRITE setChannel5 NOTIFY channel5Changed)
-  Q_PROPERTY(
-      bool channel6 READ channel6 WRITE setChannel6 NOTIFY channel6Changed)
-  Q_PROPERTY(
-      bool channel7 READ channel7 WRITE setChannel7 NOTIFY channel7Changed)
 
   Q_PROPERTY(
       int threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
@@ -274,15 +245,8 @@ class Application : public QObject {
   QStringList m_songList = {};
   QStringList m_trackList = {};
   QString m_currentSongTitle = QString::null;
+  QList<Track*> m_tracks = {};
 
-  bool m_channel0 = false;
-  bool m_channel1 = false;
-  bool m_channel2 = false;
-  bool m_channel3 = false;
-  bool m_channel4 = false;
-  bool m_channel5 = false;
-  bool m_channel6 = false;
-  bool m_channel7 = false;
  public slots:
 
   void setCurrentSongTitle(const QString& title) {
@@ -296,7 +260,6 @@ class Application : public QObject {
     if (masterVolume != m_masterVolume) {
       m_masterVolume = masterVolume;
       emit masterVolumeChanged();
-      updateMasterVolume(m_masterVolume);
     }
   }
 
@@ -304,7 +267,6 @@ class Application : public QObject {
     if (threshold != m_threshold) {
       m_threshold = threshold;
       emit thresholdChanged();
-      updateThreshold(m_threshold);
     }
   }
 
@@ -332,62 +294,6 @@ class Application : public QObject {
     }
   }
 
-  void setChannel0(bool enabled) {
-    if (enabled != m_channel0) {
-      m_channel0 = enabled;
-      emit channel0Changed();
-    }
-  }
-
-  void setChannel1(bool enabled) {
-    if (enabled != m_channel1) {
-      m_channel1 = enabled;
-      emit channel1Changed();
-    }
-  }
-
-  void setChannel2(bool enabled) {
-    if (enabled != m_channel2) {
-      m_channel2 = enabled;
-      emit channel2Changed();
-    }
-  }
-
-  void setChannel3(bool enabled) {
-    if (enabled != m_channel3) {
-      m_channel3 = enabled;
-      emit channel3Changed();
-    }
-  }
-
-  void setChannel4(bool enabled) {
-    if (enabled != m_channel4) {
-      m_channel4 = enabled;
-      emit channel4Changed();
-    }
-  }
-
-  void setChannel5(bool enabled) {
-    if (enabled != m_channel5) {
-      m_channel5 = enabled;
-      emit channel5Changed();
-    }
-  }
-
-  void setChannel6(bool enabled) {
-    if (enabled != m_channel6) {
-      m_channel6 = enabled;
-      emit channel6Changed();
-    }
-  }
-
-  void setChannel7(bool enabled) {
-    if (enabled != m_channel7) {
-      m_channel7 = enabled;
-      emit channel7Changed();
-    }
-  }
-
  public:
   int masterVolume() const { return m_masterVolume; }
   int threshold() const { return m_threshold; }
@@ -395,38 +301,13 @@ class Application : public QObject {
   bool isPlaying() const { return m_isPlaying; }
   int beat() const { return m_currentBeat; }
 
-  bool channel0() const { return m_channel0; }
-
-  bool channel1() const { return m_channel1; }
-
-  bool channel2() const { return m_channel2; }
-
-  bool channel3() const { return m_channel3; }
-
-  bool channel4() const { return m_channel4; }
-
-  bool channel5() const { return m_channel5; }
-
-  bool channel6() const { return m_channel6; }
-
-  bool channel7() const { return m_channel7; }
-
+  QQmlListProperty<Track> tracks();
   const QStringList& songList() const { return m_songList; }
   const QStringList& trackList() const { return m_trackList; }
 
  signals:
 
   void playingChanged();
-
-  void channel0Changed();
-  void channel1Changed();
-  void channel2Changed();
-  void channel3Changed();
-  void channel4Changed();
-  void channel5Changed();
-  void channel6Changed();
-  void channel7Changed();
-
   void songListChanged();
   void currentSongTitleChanged();
   void trackListChanged();
@@ -434,6 +315,7 @@ class Application : public QObject {
   void thresholdChanged();
   void updateReady(bool);
   void masterVolumeChanged();
+  void tracksChanged();
 };
 
 #endif  // APPLICATION_H

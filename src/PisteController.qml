@@ -3,17 +3,17 @@ import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.1
 import QtQuick.Controls.Styles 1.4
 
+import ElectricalBoxes 1.0
+
 Item {
     id: trackController
     width: 150
     anchors.top: parent.top
     anchors.bottom: parent.bottom
 
-    property int trackID: -1
+    property var track
 
-    property alias checked: mainButton.checked
-
-    state: app.trackList.length > trackID ? "enabled" : "disabled"
+    state: track.enabled ? "enabled" : "disabled"
     states: [
         State {
             name: "enabled"
@@ -75,20 +75,6 @@ Item {
         }
     ]
 
-    signal volumeChanged(int volume, int channel)
-    signal panChanged(int pan, int channel)
-    signal mute(int channel, bool muted)
-    signal solo(int channel, bool solo)
-    signal toggle(int channel)
-
-    Component.onCompleted: {
-        volumeChanged.connect(app.volume)
-        panChanged.connect(app.pan)
-        mute.connect(app.mute)
-        solo.connect(app.solo)
-        toggle.connect(app.button)
-    }
-
     //Bouton actif
     Button {
         id: mainButton
@@ -98,19 +84,15 @@ Item {
         width: 150
         height: 50
         checkable: true
-        onClicked: trackController.toggle(trackController.trackID)
+        checked: trackController.track.activated
         Component.onCompleted: mainButton.style = bt_out
         onCheckedChanged: mainButton.checked ? mainButton.style = bt_in : mainButton.style = bt_out
         MultiPointTouchArea {
+            onPressed: track.updateActivated(!mainButton.checked)
             anchors.fill: parent
-            mouseEnabled: false
+            mouseEnabled: true
             touchPoints: TouchPoint {
                 id: tp1
-                //TODO check if this is necessary
-//                onPressedChanged: {
-//                    if(pressed)
-//                        mainButton.checked = !mainButton.checked
-//                }
             }
         }
         Text {
@@ -119,8 +101,7 @@ Item {
             width: parent.width - 3
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: app.trackList.length
-                  > trackController.trackID ? app.trackList[trackController.trackID] : ""
+            text: track.name
         }
     }
 
@@ -139,24 +120,31 @@ Item {
         Layout.minimumHeight: 350
         minimumValue: 0
         maximumValue: 100
-        value: 50
+        value: track.volume
+        Binding {
+            target: track
+            property: "volume"
+            value: volumeSlider.value
+        }
+
         property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
         style: touchStyle
-        onValueChanged: trackController.volumeChanged(volumeSlider.value,
-                                                      trackController.trackID)
+        //        onValueChanged: track.updateVolume(volumeSlider.value)
         MouseArea {
             id: volumeSliderMouse
             anchors.fill: parent
             onPressed: {
-                volumeSlider.value = -float2int(
-                            mouseY / volumeSlider.height * 100) + 100
+                track.updateVolume(
+                            -float2int(
+                                mouseY / volumeSlider.height * 100) + 100)
                 volumeSlider.resetValue = false
             }
             onPositionChanged: if (volumeSlider.resetValue == false)
-                                   volumeSlider.value = -float2int(
-                                               mouseY / volumeSlider.height * 100) + 100
+                                   track.updateVolume(
+                                               -float2int(
+                                                   mouseY / volumeSlider.height * 100) + 100)
             onDoubleClicked: {
-                volumeSlider.value = 50
+                track.updateVolume(50)
                 volumeSlider.resetValue = true
             }
         }
@@ -175,22 +163,21 @@ Item {
         Layout.minimumHeight: 100
         minimumValue: -100
         maximumValue: 100
-        value: 0
-        property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
+        value: track.pan
+        //        onValueChanged: track.updatePan(panSlider.value)
         style: panStyle
-        onValueChanged: trackController.panChanged(panSlider.value,
-                                                   trackController.trackID)
+        property bool resetValue: false //Empêche le curseur de bouger (à cause du doigt qui glisse) après un reset (double clic)
         MouseArea {
             id: panSliderMouse
             anchors.fill: parent
             onPressed: {
-                panSlider.value = float2int(
-                            mouseX / panSlider.width * 200) - 100
+                track.updatePan(float2int(mouseX / panSlider.width * 200) - 100)
                 panSlider.resetValue = false
             }
             onPositionChanged: if (panSlider.resetValue == false)
-                                   panSlider.value = float2int(
-                                               mouseX / panSlider.width * 200) - 100
+                                   track.updatePan(
+                                               float2int(
+                                                   mouseX / panSlider.width * 200) - 100)
             onDoubleClicked: {
                 panSlider.value = 0
                 panSlider.resetValue = true
@@ -212,12 +199,15 @@ Item {
             x: 0
             id: muteButton
             objectName: "MuteButton"
-            width: parent.width/2
+            width: parent.width / 2
             height: parent.height
             checkable: true
             style: muteStyle
-            onClicked: trackController.mute(trackController.trackID,
-                                            muteButton.checked)
+            checked: track.muted
+            MouseArea {
+                anchors.fill: parent
+                onClicked: track.updateMuted(!muteButton.checked)
+            }
         }
         //Solo
         Button {
@@ -225,7 +215,7 @@ Item {
             anchors.right: parent.right
             id: soloButton
             objectName: "SoloButton"
-            width: parent.width/2
+            width: parent.width / 2
             height: parent.height
             checkable: true
             style: soloStyle
@@ -240,48 +230,12 @@ Item {
                 }
             }
 
-
-            onClicked: trackController.solo(trackController.trackID,
-                                            soloButton.checked)
-            onCheckedChanged: soloMode(trackController.trackID)
+            checked: track.solo
+            MouseArea {
+                anchors.fill: parent
+                onClicked: track.updateSolo(!soloButton.checked)
+            }
         }
-    }
-    function getMute() {
-        return muteButton.checked
-    }
-    function getMuteEnabled() {
-        return muteButton.enabled
-    }
-    function getSolo() {
-        return soloButton.checked
-    }
-
-    function changeMute() {
-        muteButton.checked = !muteButton.checked
-    }
-    function changeMuteEnabled() {
-        muteButton.enabled = !muteButton.enabled
-    }
-    function changeSolo() {
-        if (getSolo()) {
-            mainButton.checked = true
-            muteButton.checked = false
-            muteButton.enabled = false
-            volumeSlider.style = touchStyle_solo
-        } else {
-            muteButton.enabled = true
-            volumeSlider.style = touchStyle
-        }
-    }
-
-    function resetPiste() {
-        mainButton.checked = false
-        muteButton.checked = false
-        muteButton.enabled = true
-        soloButton.checked = false
-        volumeSlider.style = touchStyle
-        volumeSlider.value = 50
-        panSlider.value = 0;
     }
 
     /************************************************/
@@ -490,5 +444,4 @@ Item {
             }
         }
     }
-
 }

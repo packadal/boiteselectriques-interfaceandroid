@@ -5,6 +5,8 @@ import QtQuick.Dialogs 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.1
 
+import ElectricalBoxes 1.0
+
 ApplicationWindow {
     id: root
     visible: true
@@ -128,42 +130,14 @@ ApplicationWindow {
         }
     }
 
-    //Si appuie sur solo
-    function soloMode(i) {
-        var t
-
-        idPiste(i).changeSolo()
-
-        //Pour toutes les pistes
-        for (t = 0; t < nbPistesTotal; t++) {
-            //Si la piste n'est pas en solo, on scelle le mute
-            if (!idPiste(t).getSolo()) {
-                if (!idPiste(t).getMute())
-                    idPiste(t).changeMute()
-                if (idPiste(t).getMuteEnabled())
-                    idPiste(t).changeMuteEnabled()
-            }
-        } //end for
-
-        //Si aucune piste est en solo, on démute tout
-        t = 0
-        while (t < nbPistesTotal && !idPiste(t).getSolo())
-            t++
-        if (t > nbPistesTotal - 1)
-            for (t = 0; t < nbPistesTotal; t++) {
-                if (idPiste(t).getMute())
-                    idPiste(t).changeMute()
-                if (!idPiste(t).getMuteEnabled())
-                    idPiste(t).changeMuteEnabled()
-            }
-    }
     //Si appuie sur reset
     function doReset() {
         app.reset()
         app.resetThreshold()
-        masterVolumeSlider.value = 50
-        for (var i = 0; i < nbPistesTotal; i++)
-            idPiste(i).resetPiste()
+        for (var i = 0; i < app.tracks.length; i++)
+        {
+            app.tracks[i].reset()
+        }
     }
 
     function float2int(value) {
@@ -348,7 +322,6 @@ ApplicationWindow {
                     delegate: Button {
                         text: modelData
                         onClicked: {
-                            doReset()
                             changeSong.text = modelData
                             windowStates.state = "loading"
                             app.selectSong(modelData)
@@ -431,43 +404,35 @@ ApplicationWindow {
 
                 PisteController {
                     id: piste0
-                    trackID: 0
-                    checked: app.channel0
+                    track: app.tracks[0]
                 }
                 PisteController {
                     id: piste1
-                    trackID: 1
-                    checked: app.channel1
+                    track: app.tracks[1]
                 }
                 PisteController {
                     id: piste2
-                    trackID: 2
-                    checked: app.channel2
+                    track: app.tracks[2]
                 }
                 PisteController {
                     id: piste3
-                    trackID: 3
-                    checked: app.channel3
+                    track: app.tracks[3]
                 }
                 PisteController {
                     id: piste4
-                    trackID: 4
-                    checked: app.channel4
+                    track: app.tracks[4]
                 }
                 PisteController {
                     id: piste5
-                    trackID: 5
-                    checked: app.channel5
+                    track: app.tracks[5]
                 }
                 PisteController {
                     id: piste6
-                    trackID: 6
-                    checked: app.channel6
+                    track: app.tracks[6]
                 }
                 PisteController {
                     id: piste7
-                    trackID: 7
-                    checked: app.channel7
+                    track: app.tracks[7]
                 }
             }
 

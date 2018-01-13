@@ -4,7 +4,8 @@ QT += qml quick widgets quickcontrols2
 
 CONFIG += c++11
 SOURCES += main.cpp \
-	Application.cpp
+	Application.cpp \
+    track.cpp
 
 RESOURCES += qml.qrc
 

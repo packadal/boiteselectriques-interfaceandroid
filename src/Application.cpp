@@ -3,6 +3,10 @@
 #include <cmath>
 
 Application::Application(QObject* parent) : QObject(parent) {
+  for (unsigned char i = 0; i < 8; ++i) {
+    m_tracks.append(new Track(i, m_sender, this));
+  }
+
   m_oscReceiver.addHandler(
       "/box/sensor",
       std::bind(&Application::handle__box_sensor, this, std::placeholders::_1));
@@ -30,6 +34,20 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler(
       "/box/master",
       std::bind(&Application::handle__box_master, this, std::placeholders::_1));
+  m_oscReceiver.addHandler(
+      "/box/volume",
+      std::bind(&Application::handle__box_volume, this, std::placeholders::_1));
+  m_oscReceiver.addHandler("/box/pan", std::bind(&Application::handle__box_pan,
+                                                 this, std::placeholders::_1));
+  m_oscReceiver.addHandler(
+      "/box/mute",
+      std::bind(&Application::handle__box_mute, this, std::placeholders::_1));
+  m_oscReceiver.addHandler(
+      "/box/solo",
+      std::bind(&Application::handle__box_solo, this, std::placeholders::_1));
+  m_oscReceiver.addHandler("/box/playing",
+                           std::bind(&Application::handle__box_playing, this,
+                                     std::placeholders::_1));
 
   m_oscReceiver.run();
 
@@ -48,14 +66,29 @@ void Application::handle__box_tracksList(
     osc::ReceivedMessageArgumentStream args) {
   const char* listeT;
   args >> listeT;
-  setTrackList(QString(listeT).split('|'));
+
+  QStringList trackNames = QString(listeT).split('|');
+  for (unsigned char i = 0; i < 8; ++i) {
+    m_tracks[i]->setEnabled(i < trackNames.size());
+    if (m_tracks[i]->enabled())
+      m_tracks[i]->setName(trackNames[i]);
+  }
+  //  setTrackList();
 }
 
 void Application::handle__box_enableSync(
     osc::ReceivedMessageArgumentStream args) {
   osc::int32 val;
   args >> val;
-  syncBox(val);
+
+  for (unsigned char i = 0; i < 8; ++i) {
+    // this creates an integer with only one bit enabled, which is the i-th one,
+    // e.g. for i == 4, this will make an int whose value is 0b00010000
+    const int mask = 1 << i;
+    // this is a binary comparison that checks if val has the bit in the mask
+    // set to true or false
+    m_tracks[i]->setActivated((mask & val) != 0);
+  }
 }
 
 void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
@@ -101,82 +134,97 @@ void Application::handle__box_master(osc::ReceivedMessageArgumentStream args) {
   setMasterVolume(master);
 }
 
-void Application::deleteSong(const QString& songName) {
-  m_sender.send(
-      osc::MessageGenerator()("/box/delete_song", songName.toUtf8().data()));
+void Application::handle__box_volume(osc::ReceivedMessageArgumentStream args) {
+  osc::int32 track;
+  osc::int32 vol;
+  args >> track >> vol;
+
+  m_tracks[track]->setVolume(vol);
 }
 
-void Application::syncBox(int val) {
-  for (int i = 0; i < 8; ++i) {
+void Application::handle__box_pan(osc::ReceivedMessageArgumentStream args) {
+  osc::int32 track;
+  osc::int32 pan;
+  args >> track >> pan;
+
+  m_tracks[track]->setPan(pan);
+}
+
+void Application::handle__box_mute(osc::ReceivedMessageArgumentStream args) {
+  osc::int32 muteStatus;
+  args >> muteStatus;
+
+  for (unsigned char i = 0; i < 8; ++i) {
     // this creates an integer with only one bit enabled, which is the i-th one,
     // e.g. for i == 4, this will make an int whose value is 0b00010000
     const int mask = 1 << i;
     // this is a binary comparison that checks if val has the bit in the mask
     // set to true or false
-    setChannel(i, (mask & val) != 0);
+    m_tracks[i]->setMuted((mask & muteStatus) != 0);
   }
 }
+
+void Application::handle__box_solo(osc::ReceivedMessageArgumentStream args) {
+  osc::int32 solo;
+  bool state;
+  args >> solo;
+  args >> state;
+
+  for (unsigned char i = 0; i < 8; ++i) {
+    m_tracks[i]->setSolo(state && i == solo);
+  }
+}
+
+void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
+  bool playing;
+  args >> playing;
+  setPlaying(playing);
+}
+
+void Application::deleteSong(const QString& songName) {
+  m_sender->send(
+      osc::MessageGenerator()("/box/delete_song", songName.toUtf8().data()));
+}
+
 QString Application::song() const {
   return m_song;
 }
 
 void Application::updateThreshold(int thresh) {
-  m_sender.send(osc::MessageGenerator()("/box/update_threshold", thresh));
-}
-
-void Application::button(int chan) {
-  m_sender.send(osc::MessageGenerator()("/box/enable", chan));
-}
-
-void Application::volume(int vol, int chan) {
-  m_sender.send(osc::MessageGenerator()("/box/volume", chan, vol));
-}
-
-void Application::pan(int vol, int pan) {
-  m_sender.send(osc::MessageGenerator()("/box/pan", pan, vol));
-}
-
-void Application::mute(int chan, bool state) {
-  m_sender.send(osc::MessageGenerator()("/box/mute", chan, state));
-}
-
-void Application::solo(int chan, bool state) {
-  m_sender.send(osc::MessageGenerator()("/box/solo", chan, state));
+  m_sender->send(osc::MessageGenerator()("/box/update_threshold", thresh));
 }
 
 void Application::play() {
-  m_sender.send(osc::MessageGenerator()("/box/play", true));
+  m_sender->send(osc::MessageGenerator()("/box/play", true));
 }
 
 void Application::stop() {
-  m_sender.send(osc::MessageGenerator()("/box/stop", true));
+  m_sender->send(osc::MessageGenerator()("/box/stop", true));
   setPlaying(false);
-  setBeat(0);
 }
 
 void Application::updateMasterVolume(int vol) {
-  m_sender.send(osc::MessageGenerator()("/box/master", vol));
+  m_sender->send(osc::MessageGenerator()("/box/master", vol));
 }
 
 void Application::reset() {
-  m_sender.send(osc::MessageGenerator()("/box/reset", true));
+  m_sender->send(osc::MessageGenerator()("/box/reset", true));
   setPlaying(false);
-  setBeat(0);
 }
 
 void Application::resetThreshold() {
-  m_sender.send(osc::MessageGenerator()("/box/reset_threshold", 0));
+  m_sender->send(osc::MessageGenerator()("/box/reset_threshold", 0));
 }
 
 void Application::refreshSong() {
-  m_sender.send(osc::MessageGenerator()("/box/refresh_song", true));
+  m_sender->send(osc::MessageGenerator()("/box/refresh_song", true));
 }
 
 void Application::selectSong(const QString& song) {
   m_song = song;
   QByteArray so = song.toLatin1();
   const char* c_song = so.data();
-  m_sender.send(osc::MessageGenerator()("/box/select_song", c_song));
+  m_sender->send(osc::MessageGenerator()("/box/select_song", c_song));
 }
 
 void Application::reloadSong() {
@@ -184,24 +232,13 @@ void Application::reloadSong() {
 }
 
 void Application::sync() {
-  m_sender.send(osc::MessageGenerator()("/box/sync", true));
-}
-
-void Application::setChannel(int chan, bool enabled) {
-  static const std::function<void(bool)> enableFunctions[8] = {
-      std::bind(&Application::setChannel0, this, std::placeholders::_1),
-      std::bind(&Application::setChannel1, this, std::placeholders::_1),
-      std::bind(&Application::setChannel2, this, std::placeholders::_1),
-      std::bind(&Application::setChannel3, this, std::placeholders::_1),
-      std::bind(&Application::setChannel4, this, std::placeholders::_1),
-      std::bind(&Application::setChannel5, this, std::placeholders::_1),
-      std::bind(&Application::setChannel6, this, std::placeholders::_1),
-      std::bind(&Application::setChannel7, this, std::placeholders::_1),
-  };
-
-  enableFunctions[chan](enabled);
+  m_sender->send(osc::MessageGenerator()("/box/sync", true));
 }
 
 void Application::ready(bool go) {
   emit updateReady(go);
+}
+
+QQmlListProperty<Track> Application::tracks() {
+  return QQmlListProperty<Track>(this, m_tracks);
 }
