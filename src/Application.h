@@ -213,11 +213,17 @@ class Application : public QObject {
 
  private:
   std::shared_ptr<OscSender> m_sender =
+#ifdef __arm__
+      std::make_shared<OscSender>("192.170.0.1", 9988);
+#else
       std::make_shared<OscSender>("127.0.0.1", 9988);
+#endif
+
   OscReceiver m_oscReceiver{9989};
 
   bool m_isPlaying{false};
   int m_currentBeat = 0;
+  int m_beatCount = 32;
   QTime m_beatsTimer{};
 
   QString m_song{""};
@@ -233,6 +239,9 @@ class Application : public QObject {
   Q_PROPERTY(QStringList trackList READ trackList WRITE setTrackList NOTIFY
                  trackListChanged)
   Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY beatChanged)
+  Q_PROPERTY(int beatCount READ beatCount NOTIFY beatCountChanged)
+  Q_PROPERTY(int enabledTrackCount READ enabledTrackCount NOTIFY
+                 enabledTrackCountChanged)
   Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
 
   Q_PROPERTY(
@@ -240,6 +249,7 @@ class Application : public QObject {
   Q_PROPERTY(int masterVolume READ masterVolume WRITE setMasterVolume NOTIFY
                  masterVolumeChanged)
 
+  int m_enabledTrackCount = 0;
   int m_masterVolume = 0;
   int m_threshold = 49;
   QStringList m_songList = {};
@@ -295,11 +305,13 @@ class Application : public QObject {
   }
 
  public:
+  int enabledTrackCount() const { return m_enabledTrackCount; }
   int masterVolume() const { return m_masterVolume; }
   int threshold() const { return m_threshold; }
   QString currentSongTitle() const { return m_currentSongTitle; }
   bool isPlaying() const { return m_isPlaying; }
   int beat() const { return m_currentBeat; }
+  int beatCount() const { return m_beatCount; }
 
   QQmlListProperty<Track> tracks();
   const QStringList& songList() const { return m_songList; }
@@ -312,10 +324,12 @@ class Application : public QObject {
   void currentSongTitleChanged();
   void trackListChanged();
   void beatChanged();
+  void beatCountChanged();
   void thresholdChanged();
   void updateReady(bool);
   void masterVolumeChanged();
   void tracksChanged();
+  void enabledTrackCountChanged();
 };
 
 #endif  // APPLICATION_H

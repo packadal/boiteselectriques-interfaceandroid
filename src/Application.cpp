@@ -66,14 +66,13 @@ void Application::handle__box_tracksList(
     osc::ReceivedMessageArgumentStream args) {
   const char* listeT;
   args >> listeT;
-
   QStringList trackNames = QString(listeT).split('|');
-  for (unsigned char i = 0; i < 8; ++i) {
-    m_tracks[i]->setEnabled(i < trackNames.size());
-    if (m_tracks[i]->enabled())
-      m_tracks[i]->setName(trackNames[i]);
+  for (unsigned char i = 0; i < trackNames.size(); ++i) {
+    m_tracks[i]->setName(trackNames[i]);
   }
-  //  setTrackList();
+
+  m_enabledTrackCount = trackNames.size();
+  emit enabledTrackCountChanged();
 }
 
 void Application::handle__box_enableSync(
@@ -81,7 +80,7 @@ void Application::handle__box_enableSync(
   osc::int32 val;
   args >> val;
 
-  for (unsigned char i = 0; i < 8; ++i) {
+  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
     // this creates an integer with only one bit enabled, which is the i-th one,
     // e.g. for i == 4, this will make an int whose value is 0b00010000
     const int mask = 1 << i;
@@ -139,7 +138,9 @@ void Application::handle__box_volume(osc::ReceivedMessageArgumentStream args) {
   osc::int32 vol;
   args >> track >> vol;
 
-  m_tracks[track]->setVolume(vol);
+  if (track < m_tracks.size()) {
+    m_tracks[track]->setVolume(vol);
+  }
 }
 
 void Application::handle__box_pan(osc::ReceivedMessageArgumentStream args) {
@@ -147,14 +148,16 @@ void Application::handle__box_pan(osc::ReceivedMessageArgumentStream args) {
   osc::int32 pan;
   args >> track >> pan;
 
-  m_tracks[track]->setPan(pan);
+  if (track < m_tracks.size()) {
+    m_tracks[track]->setPan(pan);
+  }
 }
 
 void Application::handle__box_mute(osc::ReceivedMessageArgumentStream args) {
   osc::int32 muteStatus;
   args >> muteStatus;
 
-  for (unsigned char i = 0; i < 8; ++i) {
+  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
     // this creates an integer with only one bit enabled, which is the i-th one,
     // e.g. for i == 4, this will make an int whose value is 0b00010000
     const int mask = 1 << i;
@@ -170,7 +173,7 @@ void Application::handle__box_solo(osc::ReceivedMessageArgumentStream args) {
   args >> solo;
   args >> state;
 
-  for (unsigned char i = 0; i < 8; ++i) {
+  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
     m_tracks[i]->setSolo(state && i == solo);
   }
 }
@@ -191,7 +194,9 @@ QString Application::song() const {
 }
 
 void Application::updateThreshold(int thresh) {
-  m_sender->send(osc::MessageGenerator()("/box/update_threshold", thresh));
+  if (thresh != threshold()) {
+    m_sender->send(osc::MessageGenerator()("/box/update_threshold", thresh));
+  }
 }
 
 void Application::play() {
