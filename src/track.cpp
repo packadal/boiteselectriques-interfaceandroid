@@ -72,11 +72,15 @@ void Track::updateSolo(bool solo) {
 }
 
 void Track::updateVolume(int volume) {
-  m_sender->send(osc::MessageGenerator()("/box/volume", m_trackID, volume));
+  if (volume != m_volume) {
+    m_sender->send(osc::MessageGenerator()("/box/volume", m_trackID, volume));
+  }
 }
 
 void Track::updatePan(int pan) {
-  m_sender->send(osc::MessageGenerator()("/box/pan", m_trackID, pan));
+  if (pan != m_pan) {
+    m_sender->send(osc::MessageGenerator()("/box/pan", m_trackID, pan));
+  }
 }
 
 void Track::reset() {
