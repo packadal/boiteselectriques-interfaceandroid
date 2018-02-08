@@ -261,7 +261,7 @@ ApplicationWindow {
                                     property bool isRightBorder: index === 3
                                     // resize the beat indicators depending on the total beat count
                                     // leave some space for the spacing every 4 indicators
-                                    width: ((beatDisplay.width - beatDisplay.spacing * (app.beatCount/4 - 1))/app.beatCount) - groupRow.spacing*3/4
+                                    width: ((beatDisplay.width - beatDisplay.anchors.leftMargin - beatDisplay.spacing * (app.beatCount/4 - 1))/app.beatCount) - groupRow.spacing*3/4
                                     height: 30
                                     radius: (indicator.isLeftBorder || indicator.isRightBorder ) ? 3 : 0
                                     color: (groupRow.groupIndex * 4 + index)

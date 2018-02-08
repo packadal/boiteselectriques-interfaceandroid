@@ -175,8 +175,11 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
 
 void Application::handle__box_beat_count(
     osc::ReceivedMessageArgumentStream args) {
-  int beatCount;
+  osc::int32 beatCount;
   args >> beatCount;
+  // make sure the beatCount is a multiple of 4
+  while ((beatCount % 4) != 0)
+    ++beatCount;
   m_beatCount = beatCount;
   emit beatCountChanged();
 }
