@@ -10,18 +10,15 @@ import ElectricalBoxes 1.0
 ApplicationWindow {
     id: root
     visible: true
-    width: 1280
-    height: 800
-//    width: 1440
-//    height: 1024
+    width: Screen.width
+    height: Screen.height
     title: qsTr("Les Boîtes Electriques")
 
     Material.theme: Material.Dark
     Material.primary: Material.BlueGrey
-    Material.accent: Material.Green
+    Material.accent: Material.color(Material.Green)
 
     property int nbPistesTotal: 8
-
 
     /************************************************/
     /*                                              */
@@ -244,7 +241,7 @@ ApplicationWindow {
                     // here we consider the maximum beatCount to be 96
                     // given that 96/8 = 12, we want the spacing to be 4 in the minimal case
                     // and to grow when there are less beats
-                    spacing: 4*(13 - app.beatCount/8)
+                    spacing: 4 * (13 - app.beatCount / 8)
 
                     Repeater {
                         model: app.beatCount / 4
@@ -261,13 +258,15 @@ ApplicationWindow {
                                     property bool isRightBorder: index === 3
                                     // resize the beat indicators depending on the total beat count
                                     // leave some space for the spacing every 4 indicators
-                                    width: ((beatDisplay.width - beatDisplay.anchors.leftMargin - beatDisplay.spacing * (app.beatCount/4 - 1))/app.beatCount) - groupRow.spacing*3/4
+                                    width: ((beatDisplay.width - beatDisplay.anchors.leftMargin
+                                             - beatDisplay.spacing * (app.beatCount / 4 - 1))
+                                            / app.beatCount) - groupRow.spacing * 3 / 4
                                     height: 30
-                                    radius: (indicator.isLeftBorder || indicator.isRightBorder ) ? 3 : 0
-                                    color: (groupRow.groupIndex * 4 + index)
-                                           < app.beat ? Material.color(
-                                                            Material.Green) : Material.color(
-                                                            Material.Grey)
+                                    radius: (indicator.isLeftBorder
+                                             || indicator.isRightBorder) ? 3 : 0
+                                    color: Material.color(
+                                               (groupRow.groupIndex * 4 + index)
+                                               < app.beat ? Material.Green : Material.Grey)
 
                                     antialiasing: true
                                     // this rectangle masks the rounded borders to make the blocks look more unified

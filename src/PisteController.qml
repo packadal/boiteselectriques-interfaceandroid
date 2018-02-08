@@ -67,8 +67,7 @@ Item {
     Button {
         id: mainButton
 
-        Material.theme: Material.Light
-        Material.accent: trackController.track.muted ? Material.DeepOrange : Material.Green
+        Material.accent: Material.color(trackController.track.muted ? Material.DeepOrange : Material.Green)
 
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
@@ -88,7 +87,6 @@ Item {
     }
 
     Button {
-        Material.theme: Material.Light
 
         anchors.horizontalCenter: mainButton.horizontalCenter
         anchors.top: mainButton.bottom
