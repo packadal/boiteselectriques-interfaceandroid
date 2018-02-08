@@ -64,7 +64,7 @@ void Application::handle__box_tracksList(
     osc::ReceivedMessageArgumentStream args) {
   const char* listeT;
   args >> listeT;
-  QStringList trackNames = QString(listeT).split('|');
+  QStringList trackNames = QString::fromUtf8(listeT).split('|');
   for (unsigned char i = 0; i < trackNames.size(); ++i) {
     m_tracks[i]->setName(trackNames[i]);
   }
@@ -99,7 +99,7 @@ void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
 void Application::handle__box_title(osc::ReceivedMessageArgumentStream args) {
   const char* title;
   args >> title;
-  setCurrentSongTitle(title);
+  setCurrentSongTitle(QString::fromUtf8(title));
 }
 
 void Application::handle__box_songsList(
@@ -107,7 +107,7 @@ void Application::handle__box_songsList(
   const char* liste;
   args >> liste;
 
-  setSongList(QString(liste).split('|'));
+  setSongList(QString::fromUtf8(liste).split('|'));
 }
 
 void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
@@ -224,7 +224,7 @@ void Application::refreshSong() {
 
 void Application::selectSong(const QString& song) {
   m_song = song;
-  QByteArray so = song.toLatin1();
+  QByteArray so = song.toUtf8();
   const char* c_song = so.data();
   m_sender->send(osc::MessageGenerator()("/box/select_song", c_song));
 }
