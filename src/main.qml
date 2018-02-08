@@ -150,7 +150,7 @@ ApplicationWindow {
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: windowStates.state = "selecting"
+                onClicked: drawerMenu.visible = true
             }
         }
 
@@ -241,7 +241,10 @@ ApplicationWindow {
                     anchors.left: play.right
                     anchors.leftMargin: 16
                     anchors.right: parent.right
-                    spacing: 16
+                    // here we consider the maximum beatCount to be 96
+                    // given that 96/8 = 12, we want the spacing to be 4 in the minimal case
+                    // and to grow when there are less beats
+                    spacing: 4*(13 - app.beatCount/8)
 
                     Repeater {
                         model: app.beatCount / 4
@@ -258,7 +261,7 @@ ApplicationWindow {
                                     property bool isRightBorder: index === 3
                                     // resize the beat indicators depending on the total beat count
                                     // leave some space for the spacing every 4 indicators
-                                    width: Math.floor(((beatDisplay.width - (app.beatCount/4)*beatDisplay.spacing)/ app.beatCount) - groupRow.spacing)
+                                    width: ((beatDisplay.width - beatDisplay.spacing * (app.beatCount/4 - 1))/app.beatCount) - groupRow.spacing*3/4
                                     height: 30
                                     radius: (indicator.isLeftBorder || indicator.isRightBorder ) ? 3 : 0
                                     color: (groupRow.groupIndex * 4 + index)

@@ -17,9 +17,6 @@ Application::Application(QObject* parent) : QObject(parent) {
       "/box/beat",
       std::bind(&Application::handle__box_beat, this, std::placeholders::_1));
   m_oscReceiver.addHandler(
-      "/box/play",
-      std::bind(&Application::handle__box_play, this, std::placeholders::_1));
-  m_oscReceiver.addHandler(
       "/box/title",
       std::bind(&Application::handle__box_title, this, std::placeholders::_1));
   m_oscReceiver.addHandler("/box/songs_list",
@@ -45,13 +42,14 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler(
       "/box/solo",
       std::bind(&Application::handle__box_solo, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/playing",
+  m_oscReceiver.addHandler("/box/play",
                            std::bind(&Application::handle__box_playing, this,
+                                     std::placeholders::_1));
+  m_oscReceiver.addHandler("/box/beat_count",
+                           std::bind(&Application::handle__box_beat_count, this,
                                      std::placeholders::_1));
 
   m_oscReceiver.run();
-
-  m_beatsTimer.start();
 
   setBeat(0);
 }
@@ -96,15 +94,6 @@ void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
 
   setBeat(beat);
   // nextBeat((int)beat);
-}
-
-void Application::handle__box_play(osc::ReceivedMessageArgumentStream args) {
-  m_beatsTimer.restart();
-  osc::int32 tempo;
-  args >> tempo;
-  tempo = static_cast<int>(tempo);
-
-  setPlaying(true);
 }
 
 void Application::handle__box_title(osc::ReceivedMessageArgumentStream args) {
@@ -182,6 +171,14 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
   bool playing;
   args >> playing;
   setPlaying(playing);
+}
+
+void Application::handle__box_beat_count(
+    osc::ReceivedMessageArgumentStream args) {
+  int beatCount;
+  args >> beatCount;
+  m_beatCount = beatCount;
+  emit beatCountChanged();
 }
 
 void Application::deleteSong(const QString& songName) {

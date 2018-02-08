@@ -68,11 +68,6 @@ class Application : public QObject {
    */
   void handle__box_beat(osc::ReceivedMessageArgumentStream args);
   /**
-   * @brief play event handling
-   * @param args Song's tempo
-   */
-  void handle__box_play(osc::ReceivedMessageArgumentStream args);
-  /**
    * @brief songs_list event handling
    * @param args Songs' list
    *
@@ -129,6 +124,11 @@ class Application : public QObject {
    * @param args wether the player is playing or stopped.
    */
   void handle__box_playing(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief amount of beats in the song
+   * @param args the actual beat count
+   */
+  void handle__box_beat_count(osc::ReceivedMessageArgumentStream args);
 
  public slots:
 
@@ -224,7 +224,6 @@ class Application : public QObject {
   bool m_isPlaying{false};
   int m_currentBeat = 0;
   int m_beatCount = 32;
-  QTime m_beatsTimer{};
 
   QString m_song{""};
 

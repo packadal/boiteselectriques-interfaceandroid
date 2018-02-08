@@ -60,7 +60,7 @@ class Track : public QObject {
 
  private:
   bool m_activated = false;
-  bool m_enabled = false;
+  bool m_enabled = true;
   bool m_muted = false;
   bool m_solo = false;
   int m_volume = 50;
