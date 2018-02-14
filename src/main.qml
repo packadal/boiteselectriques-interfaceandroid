@@ -107,36 +107,20 @@ ApplicationWindow {
         anchors.right: parent.right
         height: 60
 
-        Image {
-            id: logo
-            anchors.left: parent.left
-            anchors.leftMargin: 32
-            anchors.verticalCenter: parent.verticalCenter
-            source: "qrc:///images/logo_80.png"
-            smooth: true
-            sourceSize.width: 56
-            sourceSize.height: 56
-        }
-
-        Text {
-            id: title
-            anchors.left: logo.right
-            anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Les Boîtes Electriques")
-        }
-
         Item {
             id: changeSong
-            anchors.centerIn: parent
+            anchors.left: parent.left
+            anchors.leftMargin: 32
             width: changeSongIcon.width + changeSongText.width + 8
             height: parent.height
-            property alias text: changeSongText.text
 
             Image {
                 id: changeSongIcon
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                source: "qrc:///images/ic_library_music_white_24dp.png"
+                height: 48
+                fillMode: Image.PreserveAspectFit
+                source: "qrc:///images/ic_menu_white_48dp.png"
             }
             Text {
                 id: changeSongText
@@ -151,6 +135,29 @@ ApplicationWindow {
             }
         }
 
+
+        Item {
+            anchors.centerIn: parent
+            width: title.width + logo.width
+            Image {
+                id: logo
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                source: "qrc:///images/logo_80.png"
+                smooth: true
+                sourceSize.width: 56
+                sourceSize.height: 56
+            }
+
+            Text {
+                id: title
+                anchors.left: logo.right
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("Les Boîtes Electriques")
+            }
+        }
+
+
         Text {
             id: quit
             anchors.right: parent.right
@@ -160,7 +167,6 @@ ApplicationWindow {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    doReset()
                     Qt.quit()
                 }
             }
@@ -190,7 +196,7 @@ ApplicationWindow {
             anchors.margins: 32
             visible: false
 
-             //Piste Controllers
+            //Piste Controllers
             RowLayout {
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -202,8 +208,8 @@ ApplicationWindow {
                 Repeater {
                     model: app.enabledTrackCount
                     delegate: PisteController {
-                            track: app.tracks[index]
-                        }
+                        track: app.tracks[index]
+                    }
                 }
             }
 
@@ -393,7 +399,6 @@ ApplicationWindow {
                         flat: true
                         width: parent.width
                         onClicked: {
-                            changeSong.text = modelData
                             windowStates.state = "loading"
                             app.selectSong(modelData)
                         }

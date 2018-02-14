@@ -11,7 +11,7 @@
         <file>images/ic_play_arrow_white_48dp.png</file>
         <file>images/ic_stop_white_48dp.png</file>
         <file>images/ic_refresh_white_48dp.png</file>
-        <file>images/ic_library_music_white_24dp.png</file>
         <file>images/ic_delete_forever_white_48dp.png</file>
+        <file>images/ic_menu_white_48dp.png</file>
     </qresource>
 </RCC>
