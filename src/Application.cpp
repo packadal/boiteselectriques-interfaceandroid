@@ -157,13 +157,16 @@ void Application::handle__box_mute(osc::ReceivedMessageArgumentStream args) {
 }
 
 void Application::handle__box_solo(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 solo;
-  bool state;
-  args >> solo;
-  args >> state;
+  osc::int32 soloStatus;
+  args >> soloStatus;
 
   for (unsigned char i = 0; i < m_tracks.size(); ++i) {
-    m_tracks[i]->setSolo(state && i == solo);
+    // this creates an integer with only one bit enabled, which is the i-th one,
+    // e.g. for i == 4, this will make an int whose value is 0b00010000
+    const int mask = 1 << i;
+    // this is a binary comparison that checks if val has the bit in the mask
+    // set to true or false
+    m_tracks[i]->setSolo((mask & soloStatus) != 0);
   }
 }
 
