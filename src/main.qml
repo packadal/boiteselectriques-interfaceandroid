@@ -1,7 +1,6 @@
 import QtQuick 2.3
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
-import QtQuick.Dialogs 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.1
 
@@ -135,7 +134,6 @@ ApplicationWindow {
             }
         }
 
-
         Item {
             anchors.centerIn: parent
             width: title.width + logo.width
@@ -156,7 +154,6 @@ ApplicationWindow {
                 text: qsTr("Les Boîtes Electriques")
             }
         }
-
 
         Text {
             id: quit
@@ -385,25 +382,85 @@ ApplicationWindow {
                 color: Material.color(Material.Grey)
             }
 
+            Label {
+                width: parent.width
+                text: "Liste des chansons"
+                font.pointSize: 20
+
+                Button {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: height
+                    height: parent.height - 16
+                    flat: true
+                    Image {
+                        visible: songListView.hasSelectedSongs
+                        source: "qrc:///images/ic_delete_forever_white_48dp.png"
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectFit
+                    }
+                    onClicked: deletionConfirmation.visible = true
+                }
+            }
+
             ScrollView {
                 clip: true
                 width: parent.width
                 height: parent.height - thresholdItem.height
 
                 ListView {
+                    // since lists in QML do not trigger events when elements are updated
+                    // and using a model seems overkill, let's use another boolean property
+                    property bool hasSelectedSongs: false
+                    property var selectedSongs: []
+                    id: songListView
                     model: app.songList
                     delegate: Button {
+                        id: songButton
+                        // use the 'highlighted' property to track selected items
+                        property alias selected: songButton.highlighted
+                        Material.accent: Material.color(Material.BlueGrey)
                         Component.onCompleted: contentItem.alignment = Qt.AlignLeft
-
                         text: modelData
-                        flat: true
+                        flat: !highlighted
                         width: parent.width
+                        height: 60
                         onClicked: {
                             windowStates.state = "loading"
                             app.selectSong(modelData)
                         }
-                        onPressAndHold: app.deleteSong(modelData)
+                        onPressAndHold: {
+                            var index = songListView.selectedSongs.indexOf(
+                                        modelData)
+                            if (index >= 0) {
+                                songListView.selectedSongs.splice(index, 1)
+                            } else {
+                                songListView.selectedSongs.push(modelData)
+                            }
+
+                            songListView.hasSelectedSongs = songListView.selectedSongs.length > 0
+                            songButton.highlighted = !songButton.highlighted
+                        }
                     }
+                }
+            }
+        }
+    }
+    Item {
+        anchors.centerIn: parent
+        width: deletionConfirmation.width
+        height: deletionConfirmation.height
+
+        Dialog {
+            id: deletionConfirmation
+            modal: true
+            standardButtons: Dialog.Ok | Dialog.Cancel
+
+            title: "Voulez vous vraiment supprimer ces chansons ?"
+            onAccepted: {
+                for (var i = 0; i < songListView.selectedSongs.length; ++i) {
+                    app.deleteSong(songListView.selectedSongs[i])
                 }
             }
         }
