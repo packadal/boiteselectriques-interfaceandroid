@@ -1,6 +1,7 @@
 TEMPLATE = app
 
 QT += qml quick widgets quickcontrols2
+android: QT += androidextras
 
 CONFIG += c++11
 SOURCES += main.cpp \
