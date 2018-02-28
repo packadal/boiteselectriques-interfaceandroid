@@ -18,6 +18,7 @@
 #include <QObject>
 #include <QQmlListProperty>
 #include <QTime>
+#include <QTimer>
 #include <chrono>
 #include <thread>
 
@@ -201,6 +202,14 @@ class Application : public QObject {
    */
   void sync();
 
+  /**
+   * @brief tries to connect to the server and updates the connectionError
+   * property.
+   */
+  void checkConnection();
+
+  void acceptConnection();
+
   /******************
    * CLIENT'S UPDATE *
    *******************/
@@ -248,13 +257,18 @@ class Application : public QObject {
   Q_PROPERTY(int masterVolume READ masterVolume WRITE setMasterVolume NOTIFY
                  masterVolumeChanged)
 
+  Q_PROPERTY(
+      bool connectionError READ connectionError NOTIFY connectionErrorChanged)
+
   int m_enabledTrackCount = 0;
   int m_masterVolume = 0;
   int m_threshold = 49;
+  bool m_connectionError = false;
   QStringList m_songList = {};
   QStringList m_trackList = {};
   QString m_currentSongTitle = QString::null;
   QList<Track*> m_tracks = {};
+  QTimer m_connectionTest;
 
  public slots:
 
@@ -304,6 +318,7 @@ class Application : public QObject {
   }
 
  public:
+  bool connectionError() const { return m_connectionError; }
   int enabledTrackCount() const { return m_enabledTrackCount; }
   int masterVolume() const { return m_masterVolume; }
   int threshold() const { return m_threshold; }
@@ -329,6 +344,8 @@ class Application : public QObject {
   void masterVolumeChanged();
   void tracksChanged();
   void enabledTrackCountChanged();
+  void connectionErrorChanged();
+  void connectionEstablished();
 };
 
 #endif  // APPLICATION_H

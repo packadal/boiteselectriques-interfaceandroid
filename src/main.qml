@@ -465,4 +465,27 @@ ApplicationWindow {
             }
         }
     }
+    Item {
+        anchors.centerIn: parent
+        width: connectionErrorMessage.width
+        height: connectionErrorMessage.height
+
+        Dialog {
+            TextMetrics {
+                id: textMetrics
+                text: connectionErrorMessage.title
+                elide: Text.ElideNone
+            }
+
+            id: connectionErrorMessage
+            visible: app.connectionError
+            modal: true
+            standardButtons: Dialog.Retry
+            title: "Erreur de connection au serveur"
+            contentWidth: textMetrics.boundingRect.width
+            onAccepted: {
+                app.checkConnection()
+            }
+        }
+    }
 }

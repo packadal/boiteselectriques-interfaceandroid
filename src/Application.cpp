@@ -52,6 +52,14 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.run();
 
   setBeat(0);
+  connect(&m_connectionTest, &QTimer::timeout, [this]() {
+    qWarning() << "connection error";
+    m_connectionError = true;
+    emit connectionErrorChanged();
+  });
+  connect(this, &Application::connectionEstablished, this,
+          &Application::acceptConnection);
+  checkConnection();
 }
 
 void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args) {
@@ -75,6 +83,9 @@ void Application::handle__box_tracksList(
 
 void Application::handle__box_enableSync(
     osc::ReceivedMessageArgumentStream args) {
+  // stop the timer that tries to find out if there are connection issues
+  emit connectionEstablished();
+
   osc::int32 val;
   args >> val;
 
@@ -241,6 +252,18 @@ void Application::reloadSong() {
 
 void Application::sync() {
   m_sender->send(osc::MessageGenerator()("/box/sync", true));
+}
+
+void Application::checkConnection() {
+  sync();
+  m_connectionTest.setSingleShot(true);
+  m_connectionTest.start(500);
+}
+
+void Application::acceptConnection() {
+  m_connectionTest.stop();
+  m_connectionError = false;
+  emit connectionErrorChanged();
 }
 
 void Application::ready(bool go) {
