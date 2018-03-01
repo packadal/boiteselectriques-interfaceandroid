@@ -45,9 +45,6 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler("/box/play",
                            std::bind(&Application::handle__box_playing, this,
                                      std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/beat_count",
-                           std::bind(&Application::handle__box_beat_count, this,
-                                     std::placeholders::_1));
 
   m_oscReceiver.run();
 
@@ -100,7 +97,7 @@ void Application::handle__box_enableSync(
 }
 
 void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 beat;
+  double beat;
   args >> beat;
 
   setBeat(beat);
@@ -185,17 +182,6 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
   bool playing;
   args >> playing;
   setPlaying(playing);
-}
-
-void Application::handle__box_beat_count(
-    osc::ReceivedMessageArgumentStream args) {
-  osc::int32 beatCount;
-  args >> beatCount;
-  // make sure the beatCount is a multiple of 4
-  while ((beatCount % 4) != 0)
-    ++beatCount;
-  m_beatCount = beatCount;
-  emit beatCountChanged();
 }
 
 void Application::deleteSong(const QString& songName) {

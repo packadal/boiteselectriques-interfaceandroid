@@ -1,4 +1,4 @@
-import QtQuick 2.3
+import QtQuick 2.7
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
@@ -241,49 +241,29 @@ ApplicationWindow {
                     anchors.left: play.right
                     anchors.leftMargin: 16
                     anchors.right: parent.right
-                    // here we consider the maximum beatCount to be 96
-                    // given that 96/8 = 12, we want the spacing to be 4 in the minimal case
-                    // and to grow when there are less beats
-                    spacing: 4 * (13 - app.beatCount / 8)
 
-                    Repeater {
-                        model: app.beatCount / 4
-                        delegate: Row {
-                            id: groupRow
-                            property int groupIndex: index
-                            spacing: 2
+                    Rectangle {
+                        radius: 5
+                        width: beatDisplay.width - beatDisplay.anchors.leftMargin
+                        height: 30
+                        color: Material.color(Material.Grey)
+                        Rectangle {
+                            radius: 5
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: parent.height
+                            width:  app.beat * parent.width
 
-                            Repeater {
-                                model: 4
-                                delegate: Rectangle {
-                                    id: indicator
-                                    property bool isLeftBorder: index === 0
-                                    property bool isRightBorder: index === 3
-                                    // resize the beat indicators depending on the total beat count
-                                    // leave some space for the spacing every 4 indicators
-                                    width: ((beatDisplay.width - beatDisplay.anchors.leftMargin
-                                             - beatDisplay.spacing * (app.beatCount / 4 - 1))
-                                            / app.beatCount) - groupRow.spacing * 3 / 4
-                                    height: 30
-                                    radius: (indicator.isLeftBorder
-                                             || indicator.isRightBorder) ? 3 : 0
-                                    color: Material.color(
-                                               (groupRow.groupIndex * 4 + index)
-                                               < app.beat ? Material.Green : Material.Grey)
+                            color: Material.color(Material.Green)
+                            Rectangle {
+                                id: mask
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.horizontalCenter
+                                anchors.right: parent.right
 
-                                    antialiasing: true
-                                    // this rectangle masks the rounded borders to make the blocks look more unified
-                                    Rectangle {
-                                        id: mask
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                        anchors.left: indicator.isRightBorder ? parent.left : parent.horizontalCenter
-                                        anchors.right: indicator.isLeftBorder ? parent.right : parent.horizontalCenter
-
-                                        width: parent.radius
-                                        color: parent.color
-                                    }
-                                }
+                                width: parent.radius
+                                color: parent.color
                             }
                         }
                     }

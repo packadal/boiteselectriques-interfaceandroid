@@ -125,11 +125,6 @@ class Application : public QObject {
    * @param args wether the player is playing or stopped.
    */
   void handle__box_playing(osc::ReceivedMessageArgumentStream args);
-  /**
-   * @brief amount of beats in the song
-   * @param args the actual beat count
-   */
-  void handle__box_beat_count(osc::ReceivedMessageArgumentStream args);
 
  public slots:
 
@@ -231,8 +226,7 @@ class Application : public QObject {
   OscReceiver m_oscReceiver{9989};
 
   bool m_isPlaying{false};
-  int m_currentBeat = 0;
-  int m_beatCount = 32;
+  double m_currentBeat = 0;
 
   QString m_song{""};
 
@@ -246,8 +240,7 @@ class Application : public QObject {
 
   Q_PROPERTY(QStringList trackList READ trackList WRITE setTrackList NOTIFY
                  trackListChanged)
-  Q_PROPERTY(int beat READ beat WRITE setBeat NOTIFY beatChanged)
-  Q_PROPERTY(int beatCount READ beatCount NOTIFY beatCountChanged)
+  Q_PROPERTY(double beat READ beat WRITE setBeat NOTIFY beatChanged)
   Q_PROPERTY(int enabledTrackCount READ enabledTrackCount NOTIFY
                  enabledTrackCountChanged)
   Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
@@ -310,7 +303,7 @@ class Application : public QObject {
     }
   }
 
-  void setBeat(int beat) {
+  void setBeat(double beat) {
     if (beat != m_currentBeat) {
       m_currentBeat = beat;
       emit beatChanged();
@@ -324,8 +317,7 @@ class Application : public QObject {
   int threshold() const { return m_threshold; }
   QString currentSongTitle() const { return m_currentSongTitle; }
   bool isPlaying() const { return m_isPlaying; }
-  int beat() const { return m_currentBeat; }
-  int beatCount() const { return m_beatCount; }
+  double beat() const { return m_currentBeat; }
 
   QQmlListProperty<Track> tracks();
   const QStringList& songList() const { return m_songList; }
@@ -338,7 +330,6 @@ class Application : public QObject {
   void currentSongTitleChanged();
   void trackListChanged();
   void beatChanged();
-  void beatCountChanged();
   void thresholdChanged();
   void updateReady(bool);
   void masterVolumeChanged();
