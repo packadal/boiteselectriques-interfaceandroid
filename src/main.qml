@@ -90,7 +90,6 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        app.sync()
         app.onUpdateReady.connect(root.loadingFinished)
     }
 
@@ -335,30 +334,48 @@ ApplicationWindow {
         Column {
             anchors.fill: parent
             spacing: 4
+            Label {
+                width: parent.width
+                text: "Sensibilite du capteur"
+                font.pointSize: 18
+            }
             Item {
-                height: thresholdSlider.implicitHeight + thresholdIndicator.height
+                height: mediumSensitivityButton.height//thresholdSlider.implicitHeight + thresholdIndicator.height
                 width: parent.width
                 id: thresholdItem
 
-                Slider {
-                    focus: true
-                    id: thresholdSlider
-                    stepSize: 1
-                    snapMode: Slider.NoSnap
-                    orientation: Qt.Horizontal
-                    smooth: true
-                    height: 50
-                    width: 300
-                    from: 0
-                    to: 99
-                    value: app.threshold
-                    onValueChanged: app.updateThreshold(thresholdSlider.value)
-                    Text {
-                        id: thresholdIndicator
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.bottom
-                        text: "sensibilite du capteur: %1%".arg(
-                                  thresholdSlider.value)
+                ButtonGroup {
+                    buttons: sensitivityButtons.children
+                }
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    id: sensitivityButtons
+                    spacing: 50
+                    RadioButton {
+                        text: "Faible"
+                        checked: app.threshold === 80
+                        onCheckedChanged: {
+                            if(checked)
+                                app.updateThreshold(80)
+                        }
+                    }
+                    RadioButton {
+                        id: mediumSensitivityButton
+                        text: "Moyenne"
+                        checked: app.threshold === 50
+                        onCheckedChanged: {
+                            if(checked)
+                                app.updateThreshold(50)
+                        }
+                    }
+                    RadioButton {
+                        text: "Haute"
+                        checked: app.threshold === 10
+                        onCheckedChanged: {
+                            if(checked)
+                                app.updateThreshold(10)
+                        }
                     }
                 }
             }
@@ -373,7 +390,7 @@ ApplicationWindow {
             Label {
                 width: parent.width
                 text: "Liste des chansons"
-                font.pointSize: 20
+                font.pointSize: 18
 
                 Button {
                     anchors.right: parent.right
