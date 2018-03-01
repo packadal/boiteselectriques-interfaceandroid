@@ -159,8 +159,16 @@ ApplicationWindow {
             id: quit
             anchors.right: parent.right
             anchors.rightMargin: 32
-            anchors.verticalCenter: parent.verticalCenter
+            height: parent.height
+            width:quitButtonMetrics.width * 2
             text: qsTr("Quitter")
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignRight
+
+            TextMetrics {
+                id: quitButtonMetrics
+                text: quit.text
+            }
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
