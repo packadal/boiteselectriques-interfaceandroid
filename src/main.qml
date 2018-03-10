@@ -435,6 +435,14 @@ ApplicationWindow {
                         onClicked: {
                             windowStates.state = "loading"
                             app.selectSong(modelData)
+
+                            // reset selected songs when changing song
+                            songListView.hasSelectedSongs = false
+                            songListView.selectedSongs = []
+                            for(var i = 0; i < songListView.contentItem.children.length; ++i)
+                            {
+                                songListView.contentItem.children[i].selected = false
+                            }
                         }
                         onPressAndHold: {
                             var index = songListView.selectedSongs.indexOf(
