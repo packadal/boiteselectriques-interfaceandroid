@@ -366,7 +366,7 @@ ApplicationWindow {
                         checked: app.threshold === 40
                         onCheckedChanged: {
                             if(checked)
-                                app.updateThreshold(50)
+                                app.updateThreshold(40)
                         }
                     }
                     RadioButton {
@@ -374,7 +374,7 @@ ApplicationWindow {
                         checked: app.threshold === 0
                         onCheckedChanged: {
                             if(checked)
-                                app.updateThreshold(10)
+                                app.updateThreshold(0)
                         }
                     }
                 }
