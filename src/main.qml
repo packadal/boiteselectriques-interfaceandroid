@@ -363,7 +363,7 @@ ApplicationWindow {
                     RadioButton {
                         id: mediumSensitivityButton
                         text: "Moyenne"
-                        checked: app.threshold === 50
+                        checked: app.threshold === 40
                         onCheckedChanged: {
                             if(checked)
                                 app.updateThreshold(50)
@@ -371,7 +371,7 @@ ApplicationWindow {
                     }
                     RadioButton {
                         text: "Haute"
-                        checked: app.threshold === 10
+                        checked: app.threshold === 0
                         onCheckedChanged: {
                             if(checked)
                                 app.updateThreshold(10)
