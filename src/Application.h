@@ -32,6 +32,7 @@ class Application : public QObject {
 
  public:
   explicit Application(QObject* parent = nullptr);
+  ~Application();
 
   /**
    * @brief Song's title getter

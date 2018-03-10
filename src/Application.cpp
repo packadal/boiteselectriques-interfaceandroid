@@ -59,6 +59,10 @@ Application::Application(QObject* parent) : QObject(parent) {
   checkConnection();
 }
 
+Application::~Application() {
+  m_sender->send(osc::MessageGenerator()("/box/quit", true));
+}
+
 void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args) {
   osc::int32 threshold_in;
   args >> threshold_in;
