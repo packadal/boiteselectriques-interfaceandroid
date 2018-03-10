@@ -389,18 +389,19 @@ ApplicationWindow {
 
             Label {
                 width: parent.width
+                height: implicitHeight
                 text: "Liste des chansons"
                 font.pointSize: 18
 
                 Button {
+                    visible: songListView.hasSelectedSongs
                     anchors.right: parent.right
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     width: height
-                    height: parent.height - 16
+                    height: 24
                     flat: true
                     Image {
-                        visible: songListView.hasSelectedSongs
                         source: "qrc:///images/ic_delete_forever_white_48dp.png"
                         anchors.fill: parent
                         fillMode: Image.PreserveAspectFit
