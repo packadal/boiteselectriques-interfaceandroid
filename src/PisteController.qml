@@ -67,14 +67,14 @@ Item {
     Button {
         id: mainButton
 
-        Material.accent: Material.color(trackController.track.muted ? Material.DeepOrange : Material.Green)
+        Material.accent: Material.color(track.muted ? Material.DeepOrange : Material.Green)
 
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         height: 50
         width: 120
         checkable: true
-        checked: trackController.track.activated
+        checked: track.activated
         text: track.name
         MultiPointTouchArea {
             onPressed: track.updateActivated(!mainButton.checked)
@@ -87,11 +87,12 @@ Item {
     }
 
     Button {
-
+        id: soloButton
         anchors.horizontalCenter: mainButton.horizontalCenter
         anchors.top: mainButton.bottom
-        id: soloButton
         checkable: true
+        checked: track.solo
+
         Item {
             anchors.fill: parent
             anchors.margins: 8
@@ -103,10 +104,13 @@ Item {
             }
         }
 
-        checked: track.solo
-        MouseArea {
+        MultiPointTouchArea {
+            onPressed: track.updateSolo(!soloButton.checked)
             anchors.fill: parent
-            onClicked: track.updateSolo(!soloButton.checked)
+            mouseEnabled: true
+            touchPoints: TouchPoint {
+                id: tp2
+            }
         }
     }
 
@@ -125,7 +129,7 @@ Item {
         from: 0
         to: 100
         value: track.volume
-        onValueChanged: trackController.track.updateVolume(volumeSlider.value)
+        onValueChanged: track.updateVolume(volumeSlider.value)
         snapMode: Slider.SnapAlways
         stepSize: 10
     }
