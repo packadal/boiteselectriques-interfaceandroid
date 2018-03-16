@@ -1,5 +1,8 @@
 #include "Application.h"
+#include "instrumentimageprovider.h"
 
+#include <QBuffer>
+#include <QImage>
 #include <cmath>
 
 Application::Application(QObject* parent) : QObject(parent) {
@@ -45,6 +48,9 @@ Application::Application(QObject* parent) : QObject(parent) {
   m_oscReceiver.addHandler("/box/play",
                            std::bind(&Application::handle__box_playing, this,
                                      std::placeholders::_1));
+  m_oscReceiver.addHandler(
+      "/box/images",
+      std::bind(&Application::handle__box_images, this, std::placeholders::_1));
 
   m_oscReceiver.run();
 
@@ -186,6 +192,29 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
   bool playing;
   args >> playing;
   setPlaying(playing);
+}
+
+void Application::handle__box_images(osc::ReceivedMessageArgumentStream args) {
+  const char* name;
+  osc::Blob b;
+  args >> name;
+  args >> b;
+
+  const QString imageName = QString::fromUtf8(name);
+
+  std::cerr<< "receiving image: " << imageName.toStdString() << std::endl;
+
+  QBuffer dataBuffer;
+  dataBuffer.setData(static_cast<const char*>(b.data), b.size);
+  dataBuffer.open(QBuffer::ReadOnly);
+
+  QImage image;
+  image.load(&dataBuffer, "JPG");
+  if (image.isNull()) {
+    std::cerr << "Image is invalid :(" << std::endl;
+  }
+  std::cerr << std::flush;
+  InstrumentImageProvider::registerImage(imageName, image);
 }
 
 void Application::deleteSong(const QString& songName) {

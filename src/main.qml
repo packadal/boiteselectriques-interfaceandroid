@@ -4,8 +4,6 @@ import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.1
 
-import ElectricalBoxes 1.0
-
 ApplicationWindow {
     id: root
     visible: true
@@ -159,7 +157,7 @@ ApplicationWindow {
             anchors.right: parent.right
             anchors.rightMargin: 32
             height: parent.height
-            width:quitButtonMetrics.width * 2
+            width: quitButtonMetrics.width * 2
             text: qsTr("Quitter")
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignRight
@@ -213,6 +211,7 @@ ApplicationWindow {
                     model: app.enabledTrackCount
                     delegate: PisteController {
                         track: app.tracks[index]
+                        onShowImage: imagePopup.imageName = imageName
                     }
                 }
             }
@@ -259,7 +258,7 @@ ApplicationWindow {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             height: parent.height
-                            width:  app.beat * parent.width
+                            width: app.beat * parent.width
 
                             color: Material.color(Material.Green)
                             Rectangle {
@@ -340,7 +339,7 @@ ApplicationWindow {
                 font.pointSize: 18
             }
             Item {
-                height: mediumSensitivityButton.height//thresholdSlider.implicitHeight + thresholdIndicator.height
+                height: mediumSensitivityButton.height //thresholdSlider.implicitHeight + thresholdIndicator.height
                 width: parent.width
                 id: thresholdItem
 
@@ -356,7 +355,7 @@ ApplicationWindow {
                         text: "Faible"
                         checked: app.threshold === 80
                         onCheckedChanged: {
-                            if(checked)
+                            if (checked)
                                 app.updateThreshold(80)
                         }
                     }
@@ -365,7 +364,7 @@ ApplicationWindow {
                         text: "Moyenne"
                         checked: app.threshold === 40
                         onCheckedChanged: {
-                            if(checked)
+                            if (checked)
                                 app.updateThreshold(40)
                         }
                     }
@@ -373,7 +372,7 @@ ApplicationWindow {
                         text: "Haute"
                         checked: app.threshold === 0
                         onCheckedChanged: {
-                            if(checked)
+                            if (checked)
                                 app.updateThreshold(0)
                         }
                     }
@@ -422,6 +421,8 @@ ApplicationWindow {
                     property var selectedSongs: []
                     id: songListView
                     model: app.songList
+                    width: parent.width
+                    height: parent.height
                     delegate: Button {
                         id: songButton
                         // use the 'highlighted' property to track selected items
@@ -430,7 +431,7 @@ ApplicationWindow {
                         Component.onCompleted: contentItem.alignment = Qt.AlignLeft
                         text: modelData
                         flat: !highlighted
-                        width: parent.width
+                        width: songListView.width
                         height: 60
                         onClicked: {
                             windowStates.state = "loading"
@@ -439,8 +440,7 @@ ApplicationWindow {
                             // reset selected songs when changing song
                             songListView.hasSelectedSongs = false
                             songListView.selectedSongs = []
-                            for(var i = 0; i < songListView.contentItem.children.length; ++i)
-                            {
+                            for (var i = 0; i < songListView.contentItem.children.length; ++i) {
                                 songListView.contentItem.children[i].selected = false
                             }
                         }
@@ -499,6 +499,32 @@ ApplicationWindow {
             contentWidth: textMetrics.boundingRect.width
             onAccepted: {
                 app.checkConnection()
+            }
+        }
+    }
+
+    Item {
+        anchors.fill: parent
+        Popup {
+            id: imagePopup
+            property string imageName: ""
+
+            padding: 0
+            x:0
+            y:0
+            width: root.width
+            height: root.height
+            modal: true
+            visible: imageName !== ""
+
+            Image {
+                anchors.fill: parent
+                source: "image://instruments/" + imagePopup.imageName
+                fillMode: Image.PreserveAspectFit
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: imagePopup.imageName = ""
             }
         }
     }

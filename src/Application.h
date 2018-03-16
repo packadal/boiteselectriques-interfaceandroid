@@ -126,6 +126,11 @@ class Application : public QObject {
    * @param args wether the player is playing or stopped.
    */
   void handle__box_playing(osc::ReceivedMessageArgumentStream args);
+  /**
+   * @brief receive the instruments images
+   * @param args the number of images and then a blob containing the images
+   */
+  void handle__box_images(osc::ReceivedMessageArgumentStream args);
 
  public slots:
 

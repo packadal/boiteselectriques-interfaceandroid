@@ -12,6 +12,7 @@ Item {
     anchors.bottom: parent.bottom
 
     property var track
+    signal showImage(string imageName)
 
     state: track.enabled ? "enabled" : "disabled"
     states: [
@@ -113,11 +114,39 @@ Item {
             }
         }
     }
+    //Bouton image
+    Button {
+        id: imageButton
+
+        anchors.horizontalCenter: mainButton.horizontalCenter
+        anchors.top: soloButton.bottom
+
+        Item {
+            anchors.fill: parent
+            anchors.margins: 8
+
+            Image {
+                anchors.fill: parent
+                source: "images/ic_image_white_48dp.png"
+                fillMode: Image.PreserveAspectFit
+            }
+        }
+
+
+        MultiPointTouchArea {
+            onPressed: showImage(track.name)
+            anchors.fill: parent
+            mouseEnabled: true
+            touchPoints: TouchPoint {
+                id: tp3
+            }
+        }
+    }
 
     //Volume Slider
     Slider {
         id: volumeSlider
-        anchors.top: soloButton.bottom
+        anchors.top: imageButton.bottom
         anchors.topMargin: 32
         anchors.bottom: panDial.top
         anchors.bottomMargin: 16

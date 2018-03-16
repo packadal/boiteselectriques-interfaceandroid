@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "instrumentimageprovider.h"
 
 #include <QApplication>
 #include <QFileSystemWatcher>
@@ -35,6 +36,7 @@ int main(int argc, char* argv[]) {
   qmlRegisterType<Track>("ElectricalBoxes", 1, 0, "Track");
 
   engine.rootContext()->setContextProperty("app", &monapp);
+  engine.addImageProvider("instruments", new InstrumentImageProvider());
 
   engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 

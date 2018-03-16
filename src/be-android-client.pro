@@ -6,7 +6,8 @@ android: QT += androidextras
 CONFIG += c++11
 SOURCES += main.cpp \
 	Application.cpp \
-    track.cpp
+    track.cpp \
+    instrumentimageprovider.cpp
 
 RESOURCES += qml.qrc
 
@@ -20,7 +21,9 @@ HEADERS += \
 	Application.h \
 	osc/oscmessagegenerator.h \
 	osc/oscreceiver.h \
-	osc/oscsender.h
+	osc/oscsender.h \
+    track.h \
+    instrumentimageprovider.h
 
 #### Libraries ####
   ##  Oscpack  ##
