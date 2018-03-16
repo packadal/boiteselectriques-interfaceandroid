@@ -118,6 +118,14 @@ Item {
     Button {
         id: imageButton
 
+        visible: loadingTester.status == Image.Ready
+
+        Image {
+            id: loadingTester
+            visible: false
+            source: "image://instruments/" + track.name
+        }
+
         anchors.horizontalCenter: mainButton.horizontalCenter
         anchors.top: soloButton.bottom
 
