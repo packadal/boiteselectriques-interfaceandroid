@@ -330,7 +330,7 @@ ApplicationWindow {
         height: parent.height
         width: 500
         edge: Qt.LeftEdge
-        Column {
+        ColumnLayout {
             anchors.fill: parent
             spacing: 4
             Label {
@@ -412,7 +412,8 @@ ApplicationWindow {
             ScrollView {
                 clip: true
                 width: parent.width
-                height: parent.height - thresholdItem.height
+                Layout.fillHeight: true
+                Layout.fillWidth: true
 
                 ListView {
                     // since lists in QML do not trigger events when elements are updated
