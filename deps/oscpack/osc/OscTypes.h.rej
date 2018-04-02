@@ -1,0 +1,9 @@
+--- deps/oscpack/osc/OscTypes.h
++++ deps/oscpack/osc/OscTypes.h
+@@ -1,5 +1,5 @@
+ /*
+-    oscpack -- Open Sound Control (OSC) packet wnipulation library
++	oscpack -- Open Sound Control (OSC) packet manipulation library
+     http://www.rossbencina.com/code/oscpack
+ 
+     Copyright (c) 2004-2013 Ross Bencina <rossb@audiomulch.com>

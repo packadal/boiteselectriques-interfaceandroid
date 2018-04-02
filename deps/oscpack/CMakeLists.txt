@@ -13,8 +13,7 @@ ELSE(WIN32)
  set(IpSystemTypePath ip/posix)
 ENDIF(WIN32)
 
-ADD_LIBRARY(oscpack 
-
+ADD_LIBRARY(oscpack STATIC
 ip/IpEndpointName.h
 ip/IpEndpointName.cpp
 
@@ -43,14 +42,14 @@ osc/OscOutboundPacketStream.cpp
 )
 
 
-ADD_EXECUTABLE(OscUnitTests tests/OscUnitTests.cpp)
-TARGET_LINK_LIBRARIES(OscUnitTests oscpack ${LIBS})
+#ADD_EXECUTABLE(OscUnitTests tests/OscUnitTests.cpp)
+#TARGET_LINK_LIBRARIES(OscUnitTests oscpack ${LIBS})
 
-ADD_EXECUTABLE(OscSendTests tests/OscSendTests.cpp)
-TARGET_LINK_LIBRARIES(OscSendTests oscpack ${LIBS})
+#ADD_EXECUTABLE(OscSendTests tests/OscSendTests.cpp)
+#TARGET_LINK_LIBRARIES(OscSendTests oscpack ${LIBS})
 
-ADD_EXECUTABLE(OscReceiveTest tests/OscReceiveTest.cpp)
-TARGET_LINK_LIBRARIES(OscReceiveTest oscpack ${LIBS})
+#ADD_EXECUTABLE(OscReceiveTest tests/OscReceiveTest.cpp)
+#TARGET_LINK_LIBRARIES(OscReceiveTest oscpack ${LIBS})
 
 
 ADD_EXECUTABLE(OscDump examples/OscDump.cpp)
