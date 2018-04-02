@@ -386,7 +386,10 @@ ApplicationWindow {
                 color: Material.color(Material.Grey)
             }
 
+
             Label {
+                Layout.fillWidth: true
+
                 width: parent.width
                 height: implicitHeight
                 text: "Liste des chansons"
@@ -472,12 +475,51 @@ ApplicationWindow {
             modal: true
             standardButtons: Dialog.Ok | Dialog.Cancel
 
-            title: "Voulez vous vraiment supprimer ces chansons ?"
-            onAccepted: {
-                for (var i = 0; i < songListView.selectedSongs.length; ++i) {
-                    app.deleteSong(songListView.selectedSongs[i])
+            title: "Pour confirmer la suppression, entrez le code"
+            ColumnLayout {
+                anchors.centerIn: parent
+
+                TextField {
+                    id: passwordField
+                    readOnly: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    echoMode: TextInput.Password
+                    horizontalAlignment: TextInput.AlignHCenter
+                    passwordCharacter: "*"
+                }
+
+                Grid {
+                    id: numPad
+                    columns: 3
+                    rows:4
+                    spacing: 8
+                    Repeater {
+                        model: 9
+                        delegate: Button {
+                            text: index+1
+                            onPressed: passwordField.text += text
+                        }
+                    }
+                    // this makes an empty cell
+                    Rectangle {
+                        color: "transparent"
+                    width: 5
+                    height: 5
+                    }
+                    Button { text: "0"
+                    onPressed: passwordField.text += text}
                 }
             }
+
+            onAccepted: {
+                if(passwordField.text === "2018")
+                {
+                    for (var i = 0; i < songListView.selectedSongs.length; ++i) {
+                        app.deleteSong(songListView.selectedSongs[i])
+                    }
+                }
+            }
+            onClosed: passwordField.text = ""
         }
     }
     Item {
