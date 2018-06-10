@@ -9,7 +9,7 @@ ApplicationWindow {
     visible: true
     width: Screen.width
     height: Screen.height
-    title: qsTr("Les Boîtes Electriques")
+    title: qsTr("Les Boites Electriques par Rock et Chanson")
 
     Material.theme: Material.Dark
     Material.primary: Material.BlueGrey
@@ -147,8 +147,9 @@ ApplicationWindow {
             Text {
                 id: title
                 anchors.left: logo.right
+                anchors.leftMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("Les Boîtes Electriques")
+                text: qsTr("Les Boites Electriques par Rock et Chanson")
             }
         }
 
