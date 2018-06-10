@@ -546,6 +546,46 @@ ApplicationWindow {
         }
     }
 
+    Pane {
+        id: splashScreen
+
+        anchors.right: parent.right
+        anchors.rightMargin: 32
+        anchors.verticalCenter: parent.verticalCenter
+
+        height: 300
+        width: 500
+        Material.elevation: 6
+
+        Column {
+            anchors.fill: parent
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: "qrc:///images/logo_80.png"
+                smooth: true
+                sourceSize.width: 150
+                sourceSize.height: 150
+            }
+
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                font.pixelSize: 20
+                text: qsTr("Les Boites Electriques par Rock et Chanson")
+            }
+
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                font.pixelSize: 14
+                text: qsTr("Version 4.0")
+            }
+        }
+
+        // only visible at application start
+        visible: windowStates.state == "selecting"
+    }
+
     Item {
         anchors.fill: parent
         Popup {
