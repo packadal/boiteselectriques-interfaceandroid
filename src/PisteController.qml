@@ -8,8 +8,6 @@ import ElectricalBoxes 1.0
 Item {
     id: trackController
     width: 120
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
 
     property var track
     signal showImage(string imageName)

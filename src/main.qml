@@ -211,6 +211,7 @@ ApplicationWindow {
                 Repeater {
                     model: app.enabledTrackCount
                     delegate: PisteController {
+                        Layout.fillHeight: true
                         track: app.tracks[index]
                         onShowImage: imagePopup.imageName = imageName
                     }
@@ -341,7 +342,7 @@ ApplicationWindow {
             }
             Item {
                 height: mediumSensitivityButton.height //thresholdSlider.implicitHeight + thresholdIndicator.height
-                width: parent.width
+                Layout.fillWidth: true
                 id: thresholdItem
 
                 ButtonGroup {
@@ -382,7 +383,7 @@ ApplicationWindow {
 
             // TODO this is a WIP separator
             Rectangle {
-                width: parent.width
+                Layout.fillWidth: true
                 height: 1
                 color: Material.color(Material.Grey)
             }
@@ -391,7 +392,6 @@ ApplicationWindow {
             Label {
                 Layout.fillWidth: true
 
-                width: parent.width
                 height: implicitHeight
                 text: "Liste des chansons"
                 font.pointSize: 18
@@ -415,7 +415,6 @@ ApplicationWindow {
 
             ScrollView {
                 clip: true
-                width: parent.width
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
@@ -483,7 +482,7 @@ ApplicationWindow {
                 TextField {
                     id: passwordField
                     readOnly: true
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    Layout.alignment: Qt.AlignHCenter
                     echoMode: TextInput.Password
                     horizontalAlignment: TextInput.AlignHCenter
                     passwordCharacter: "*"
