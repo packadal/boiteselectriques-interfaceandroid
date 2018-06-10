@@ -123,7 +123,7 @@ Item {
         Image {
             id: loadingTester
             visible: false
-            source: "image://instruments/" + track.name
+            source: "image://instruments/" + app.currentSongTitle + " - " + track.name
         }
 
         anchors.horizontalCenter: mainButton.horizontalCenter

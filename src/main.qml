@@ -562,7 +562,7 @@ ApplicationWindow {
 
             Image {
                 anchors.fill: parent
-                source: "image://instruments/" + imagePopup.imageName
+                source: "image://instruments/" + app.currentSongTitle + " - " + imagePopup.imageName
                 fillMode: Image.PreserveAspectFit
             }
             MouseArea {

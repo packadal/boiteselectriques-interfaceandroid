@@ -5,7 +5,7 @@
 #include <QImage>
 #include <cmath>
 
-Application::Application(QObject* parent) : QObject(parent) {
+Application::Application(QObject *parent) : QObject(parent) {
   for (unsigned char i = 0; i < 8; ++i) {
     m_tracks.append(new Track(i, m_sender, this));
   }
@@ -77,7 +77,7 @@ void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args) {
 
 void Application::handle__box_tracksList(
     osc::ReceivedMessageArgumentStream args) {
-  const char* listeT;
+  const char *listeT;
   args >> listeT;
   QStringList trackNames = QString::fromUtf8(listeT).split('|');
   for (unsigned char i = 0; i < trackNames.size(); ++i) {
@@ -115,14 +115,14 @@ void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
 }
 
 void Application::handle__box_title(osc::ReceivedMessageArgumentStream args) {
-  const char* title;
+  const char *title;
   args >> title;
   setCurrentSongTitle(QString::fromUtf8(title));
 }
 
 void Application::handle__box_songsList(
     osc::ReceivedMessageArgumentStream args) {
-  const char* liste;
+  const char *liste;
   args >> liste;
 
   setSongList(QString::fromUtf8(liste).split('|'));
@@ -195,36 +195,57 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
 }
 
 void Application::handle__box_images(osc::ReceivedMessageArgumentStream args) {
-  const char* name;
+  const char *name;
+  osc::int32 packetCount;
+  osc::int32 packetID;
   osc::Blob b;
+  args >> packetCount;
+  args >> packetID;
   args >> name;
   args >> b;
 
+  static char imageBuffer[1024 * 1024 * 10];
+  static int currentImageBufferPosition = 0;
+
   const QString imageName = QString::fromUtf8(name);
 
-  std::cerr<< "receiving image: " << imageName.toStdString() << std::endl;
+  std::cerr << "receiving image: " << imageName.toStdString() << std::endl;
 
-  QBuffer dataBuffer;
-  dataBuffer.setData(static_cast<const char*>(b.data), b.size);
-  dataBuffer.open(QBuffer::ReadOnly);
+  // reset the position on first packet, just in case something went
+  // asynchronous
+  if (packetID == 0)
+    currentImageBufferPosition = 0;
 
-  QImage image;
-  image.load(&dataBuffer, "JPG");
-  if (image.isNull()) {
-    std::cerr << "Image is invalid :(" << std::endl;
+  // copy the current packet's data into the buffer
+  memcpy(imageBuffer + currentImageBufferPosition, b.data, b.size);
+
+  currentImageBufferPosition += b.size;
+
+  // last packet, register the image
+  if (packetID == (packetCount - 1)) {
+    QBuffer dataBuffer;
+    dataBuffer.setData(imageBuffer, currentImageBufferPosition);
+    dataBuffer.open(QBuffer::ReadOnly);
+
+    QImage image;
+    image.load(&dataBuffer, "JPG");
+    if (image.isNull()) {
+      std::cerr << "Image is invalid :(" << std::endl;
+    }
+    std::cerr << std::flush;
+    InstrumentImageProvider::registerImage(imageName, image);
+
+    // reset the position, as the next package should be for a different image
+    currentImageBufferPosition = 0;
   }
-  std::cerr << std::flush;
-  InstrumentImageProvider::registerImage(imageName, image);
 }
 
-void Application::deleteSong(const QString& songName) {
+void Application::deleteSong(const QString &songName) {
   m_sender->send(
       osc::MessageGenerator()("/box/delete_song", songName.toUtf8().data()));
 }
 
-QString Application::song() const {
-  return m_song;
-}
+QString Application::song() const { return m_song; }
 
 void Application::updateThreshold(int thresh) {
   if (thresh != threshold()) {
@@ -258,16 +279,14 @@ void Application::refreshSong() {
   m_sender->send(osc::MessageGenerator()("/box/refresh_song", true));
 }
 
-void Application::selectSong(const QString& song) {
+void Application::selectSong(const QString &song) {
   m_song = song;
   QByteArray so = song.toUtf8();
-  const char* c_song = so.data();
+  const char *c_song = so.data();
   m_sender->send(osc::MessageGenerator()("/box/select_song", c_song));
 }
 
-void Application::reloadSong() {
-  selectSong(m_song);
-}
+void Application::reloadSong() { selectSong(m_song); }
 
 void Application::sync() {
   m_sender->send(osc::MessageGenerator()("/box/sync", true));
@@ -285,9 +304,7 @@ void Application::acceptConnection() {
   emit connectionErrorChanged();
 }
 
-void Application::ready(bool go) {
-  emit updateReady(go);
-}
+void Application::ready(bool go) { emit updateReady(go); }
 
 QQmlListProperty<Track> Application::tracks() {
   return QQmlListProperty<Track>(this, m_tracks);
