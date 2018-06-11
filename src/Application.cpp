@@ -196,48 +196,23 @@ void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
 
 void Application::handle__box_images(osc::ReceivedMessageArgumentStream args) {
   const char *name;
-  osc::int32 packetCount;
-  osc::int32 packetID;
   osc::Blob b;
-  args >> packetCount;
-  args >> packetID;
   args >> name;
   args >> b;
 
-  static char imageBuffer[1024 * 1024 * 10];
-  static int currentImageBufferPosition = 0;
-
   const QString imageName = QString::fromUtf8(name);
 
-  std::cerr << "receiving image: " << imageName.toStdString() << std::endl;
+  QBuffer dataBuffer;
+  dataBuffer.setData(static_cast<const char*>(b.data), b.size);
+  dataBuffer.open(QBuffer::ReadOnly);
 
-  // reset the position on first packet, just in case something went
-  // asynchronous
-  if (packetID == 0)
-    currentImageBufferPosition = 0;
-
-  // copy the current packet's data into the buffer
-  memcpy(imageBuffer + currentImageBufferPosition, b.data, b.size);
-
-  currentImageBufferPosition += b.size;
-
-  // last packet, register the image
-  if (packetID == (packetCount - 1)) {
-    QBuffer dataBuffer;
-    dataBuffer.setData(imageBuffer, currentImageBufferPosition);
-    dataBuffer.open(QBuffer::ReadOnly);
-
-    QImage image;
-    image.load(&dataBuffer, "JPG");
-    if (image.isNull()) {
-      std::cerr << "Image is invalid :(" << std::endl;
-    }
-    std::cerr << std::flush;
-    InstrumentImageProvider::registerImage(imageName, image);
-
-    // reset the position, as the next package should be for a different image
-    currentImageBufferPosition = 0;
+  QImage image;
+  image.load(&dataBuffer, "JPG");
+  if (image.isNull()) {
+    std::cerr << "Image is invalid :(" << std::endl;
   }
+
+  InstrumentImageProvider::registerImage(imageName, image);
 }
 
 void Application::deleteSong(const QString &songName) {
