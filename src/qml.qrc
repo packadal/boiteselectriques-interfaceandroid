@@ -14,5 +14,6 @@
         <file>images/ic_delete_forever_white_48dp.png</file>
         <file>images/ic_menu_white_48dp.png</file>
         <file>images/ic_image_white_48dp.png</file>
+        <file>images/logo_full.png</file>
     </qresource>
 </RCC>

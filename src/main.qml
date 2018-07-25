@@ -549,29 +549,25 @@ ApplicationWindow {
     Pane {
         id: splashScreen
 
-        anchors.right: parent.right
-        anchors.rightMargin: 32
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: drawerMenu.width/2
         anchors.verticalCenter: parent.verticalCenter
 
         height: 300
         width: 500
         Material.elevation: 6
+        Material.theme: Material.Light
+//        Material.primary: Material.Lime
 
         Column {
             anchors.fill: parent
             Image {
+                id: logo_full
                 anchors.horizontalCenter: parent.horizontalCenter
-                source: "qrc:///images/logo_80.png"
+                source: "qrc:///images/logo_full.png"
                 smooth: true
-                sourceSize.width: 150
-                sourceSize.height: 150
-            }
-
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                font.pixelSize: 20
-                text: qsTr("Les Boites Electriques par Rock et Chanson")
+                fillMode: Image.PreserveAspectFit
+                anchors.fill: parent
             }
 
             Label {
