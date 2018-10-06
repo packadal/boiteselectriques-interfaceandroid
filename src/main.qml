@@ -306,7 +306,6 @@ ApplicationWindow {
             from: 0
             to: 100
             snapMode: Slider.SnapAlways
-            stepSize: 10
             value: app.masterVolume
             onValueChanged: app.updateMasterVolume(masterVolumeSlider.value)
         }

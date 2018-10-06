@@ -166,7 +166,6 @@ Item {
         value: track.volume
         onValueChanged: track.updateVolume(volumeSlider.value)
         snapMode: Slider.SnapAlways
-        stepSize: 10
     }
 
     Dial {
