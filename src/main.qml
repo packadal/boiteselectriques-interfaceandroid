@@ -132,7 +132,8 @@ ApplicationWindow {
         }
 
         Item {
-            anchors.centerIn: parent
+            anchors.right: quit.left
+            anchors.verticalCenter: parent.verticalCenter
             width: title.width + logo.width
             Image {
                 id: logo
