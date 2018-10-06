@@ -340,45 +340,17 @@ ApplicationWindow {
                 text: "Sensibilite du capteur"
                 font.pointSize: 18
             }
-            Item {
-                height: mediumSensitivityButton.height //thresholdSlider.implicitHeight + thresholdIndicator.height
-                Layout.fillWidth: true
+
+            Slider {
                 id: thresholdItem
 
-                ButtonGroup {
-                    buttons: sensitivityButtons.children
-                }
+                Layout.fillWidth: true
 
-                RowLayout {
-                    anchors.centerIn: parent
-                    id: sensitivityButtons
-                    spacing: 50
-                    RadioButton {
-                        text: "Faible"
-                        checked: app.threshold === 80
-                        onCheckedChanged: {
-                            if (checked)
-                                app.updateThreshold(80)
-                        }
-                    }
-                    RadioButton {
-                        id: mediumSensitivityButton
-                        text: "Moyenne"
-                        checked: app.threshold === 40
-                        onCheckedChanged: {
-                            if (checked)
-                                app.updateThreshold(40)
-                        }
-                    }
-                    RadioButton {
-                        text: "Haute"
-                        checked: app.threshold === 0
-                        onCheckedChanged: {
-                            if (checked)
-                                app.updateThreshold(0)
-                        }
-                    }
-                }
+                from: 0
+                to: 100
+                orientation: Qt.Horizontal
+                value: app.threshold
+                onValueChanged: app.updateThreshold(value)
             }
 
             // TODO this is a WIP separator
