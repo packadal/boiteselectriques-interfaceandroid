@@ -447,6 +447,7 @@ ApplicationWindow {
                             for (var i = 0; i < songListView.contentItem.children.length; ++i) {
                                 songListView.contentItem.children[i].selected = false
                             }
+                            drawerMenu.close()
                         }
                         onPressAndHold: {
                             var index = songListView.selectedSongs.indexOf(
