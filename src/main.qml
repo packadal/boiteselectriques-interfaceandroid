@@ -334,6 +334,7 @@ ApplicationWindow {
         edge: Qt.LeftEdge
         ColumnLayout {
             anchors.fill: parent
+            anchors.leftMargin: 8
             spacing: 4
             Label {
                 width: parent.width
