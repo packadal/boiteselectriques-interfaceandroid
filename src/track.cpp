@@ -4,10 +4,12 @@
 
 Track::Track() {}
 
-Track::Track(unsigned char trackID,
-             std::shared_ptr<OscSender> sender,
-             QObject* parent)
-    : QObject(parent), m_trackID(trackID), m_sender(sender) {}
+Track::Track(unsigned char trackID, std::shared_ptr<OscSender> sender,
+             QObject *parent)
+    : QObject(parent), m_trackID(trackID), m_sender(sender) {
+  m_volumeTimer.setInterval(30);
+  m_volumeTimer.setSingleShot(true);
+}
 
 void Track::setActivated(bool activated) {
   if (activated != m_activated) {
@@ -72,7 +74,8 @@ void Track::updateSolo(bool solo) {
 }
 
 void Track::updateVolume(int volume) {
-  if (volume != m_volume) {
+  if (!m_volumeTimer.isActive() && volume != m_volume) {
+    m_volumeTimer.start();
     m_sender->send(osc::MessageGenerator()("/box/volume", m_trackID, volume));
   }
 }

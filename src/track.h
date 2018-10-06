@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QTimer>
 
 #include <osc/oscsender.h>
 
@@ -70,4 +71,5 @@ class Track : public QObject {
   unsigned char m_trackID = 255;
 
   std::shared_ptr<OscSender> m_sender;
+  QTimer m_volumeTimer;
 };

@@ -6,6 +6,10 @@
 #include <cmath>
 
 Application::Application(QObject *parent) : QObject(parent) {
+
+  m_volumeTimer.setInterval(30);
+  m_volumeTimer.setSingleShot(true);
+
   for (unsigned char i = 0; i < 8; ++i) {
     m_tracks.append(new Track(i, m_sender, this));
   }
@@ -238,7 +242,10 @@ void Application::stop() {
 }
 
 void Application::updateMasterVolume(int vol) {
-  m_sender->send(osc::MessageGenerator()("/box/master", vol));
+  if (!m_volumeTimer.isActive() && vol != m_masterVolume) {
+    m_volumeTimer.start();
+    m_sender->send(osc::MessageGenerator()("/box/master", vol));
+  }
 }
 
 void Application::reset() {

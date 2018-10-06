@@ -329,7 +329,8 @@ class Application : public QObject {
   const QStringList& songList() const { return m_songList; }
   const QStringList& trackList() const { return m_trackList; }
 
- signals:
+  QTimer m_volumeTimer;
+signals:
 
   void playingChanged();
   void songListChanged();
