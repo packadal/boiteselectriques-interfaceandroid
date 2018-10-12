@@ -152,7 +152,7 @@ Item {
     //Volume Slider
     Slider {
         id: volumeSlider
-        anchors.top: imageButton.bottom
+        anchors.top: soloButton.bottom
         anchors.topMargin: 32
         anchors.bottom: panDial.top
         anchors.bottomMargin: 16
