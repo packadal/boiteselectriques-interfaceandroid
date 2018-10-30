@@ -7,7 +7,8 @@ CONFIG += c++11
 SOURCES += main.cpp \
 	Application.cpp \
     track.cpp \
-    instrumentimageprovider.cpp
+    instrumentimageprovider.cpp \
+    receiver.cpp
 
 RESOURCES += qml.qrc
 
@@ -23,12 +24,18 @@ HEADERS += \
 	osc/oscreceiver.h \
 	osc/oscsender.h \
     track.h \
-    instrumentimageprovider.h
+    instrumentimageprovider.h \
+    receiver.h
 
 #### Libraries ####
   ##  Oscpack  ##
 
 OSCPACK = $$PWD/../deps/oscpack
+unix:!android {
+        INCLUDEPATH += $$OSCPACK
+        DEPENDPATH += $$OSCPACK
+        LIBS += $$OSCPACK/build/liboscpack.a
+}
 
 android-g++|android-clang {
 	unix:!macx: LIBS += -L$$OSCPACK -loscpack

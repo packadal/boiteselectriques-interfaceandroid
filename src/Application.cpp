@@ -1,11 +1,70 @@
 #include "Application.h"
 #include "instrumentimageprovider.h"
 
-#include <QBuffer>
-#include <QImage>
 #include <cmath>
 
 Application::Application(QObject *parent) : QObject(parent) {
+
+  m_receiver.moveToThread(&m_receiverThread);
+  connect(&m_receiverThread, &QThread::started, &m_receiver, &Receiver::start);
+  m_receiverThread.start();
+
+  connect(&m_receiver, &Receiver::sensor, this, &Application::setThreshold);
+  connect(&m_receiver, &Receiver::beat, this, &Application::setBeat);
+  connect(&m_receiver, &Receiver::title, this,
+          &Application::setCurrentSongTitle);
+  connect(&m_receiver, &Receiver::songList, this, &Application::setSongList);
+  connect(&m_receiver, &Receiver::ready, this, &Application::ready);
+  connect(&m_receiver, &Receiver::masterVolume, this,
+          &Application::setMasterVolume);
+  connect(&m_receiver, &Receiver::trackVolume, [this](int track, int volume) {
+    if (track < m_tracks.size()) {
+      m_tracks[track]->setVolume(volume);
+    }
+  });
+  connect(&m_receiver, &Receiver::mute, [this](int muteMask) {
+    for (unsigned char i = 0; i < m_tracks.size(); ++i) {
+      // this creates an integer with only one bit enabled, which is the i-th
+      // one, e.g. for i == 4, this will make an int whose value is 0b00010000
+      const int mask = 1 << i;
+      // this is a binary comparison that checks if val has the bit in the mask
+      // set to true or false
+      m_tracks[i]->setMuted((mask & muteMask) != 0);
+    }
+  });
+  connect(&m_receiver, &Receiver::solo, [this](int soloMask) {
+    for (unsigned char i = 0; i < m_tracks.size(); ++i) {
+      // this creates an integer with only one bit enabled, which is the i-th
+      // one, e.g. for i == 4, this will make an int whose value is 0b00010000
+      const int mask = 1 << i;
+      // this is a binary comparison that checks if val has the bit in the mask
+      // set to true or false
+      m_tracks[i]->setSolo((mask & soloMask) != 0);
+    }
+  });
+  connect(&m_receiver, &Receiver::playing, this, &Application::setPlaying);
+
+  connect(&m_receiver, &Receiver::trackList, [this](QStringList trackNames) {
+    for (unsigned char i = 0; i < trackNames.size(); ++i) {
+      m_tracks[i]->setName(trackNames[i]);
+    }
+    m_enabledTrackCount = trackNames.size();
+    emit enabledTrackCountChanged();
+  });
+  connect(&m_receiver, &Receiver::enable, [this](int enableMask) {
+    // stop the timer that tries to find out if there are connection issues
+    emit connectionEstablished();
+
+    for (unsigned char i = 0; i < m_tracks.size(); ++i) {
+      // this creates an integer with only one bit enabled, which is the
+      // i-thone, e.g. for i == 4, this will make an int whose value is
+      // 0b00010000
+      const int mask = 1 << i;
+      // this is a binary comparison that checks if val has the bit in the mask
+      // set to true or false
+      m_tracks[i]->setActivated((mask & enableMask) != 0);
+    }
+  });
 
   m_volumeTimer.setInterval(30);
   m_volumeTimer.setSingleShot(true);
@@ -13,50 +72,6 @@ Application::Application(QObject *parent) : QObject(parent) {
   for (unsigned char i = 0; i < 8; ++i) {
     m_tracks.append(new Track(i, m_sender, this));
   }
-
-  m_oscReceiver.addHandler(
-      "/box/sensor",
-      std::bind(&Application::handle__box_sensor, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/enable_sync",
-                           std::bind(&Application::handle__box_enableSync, this,
-                                     std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/beat",
-      std::bind(&Application::handle__box_beat, this, std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/title",
-      std::bind(&Application::handle__box_title, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/songs_list",
-                           std::bind(&Application::handle__box_songsList, this,
-                                     std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/ready",
-      std::bind(&Application::handle__box_ready, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/tracks_list",
-                           std::bind(&Application::handle__box_tracksList, this,
-                                     std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/master",
-      std::bind(&Application::handle__box_master, this, std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/volume",
-      std::bind(&Application::handle__box_volume, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/pan", std::bind(&Application::handle__box_pan,
-                                                 this, std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/mute",
-      std::bind(&Application::handle__box_mute, this, std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/solo",
-      std::bind(&Application::handle__box_solo, this, std::placeholders::_1));
-  m_oscReceiver.addHandler("/box/play",
-                           std::bind(&Application::handle__box_playing, this,
-                                     std::placeholders::_1));
-  m_oscReceiver.addHandler(
-      "/box/images",
-      std::bind(&Application::handle__box_images, this, std::placeholders::_1));
-
-  m_oscReceiver.run();
 
   setBeat(0);
   connect(&m_connectionTest, &QTimer::timeout, [this]() {
@@ -71,152 +86,6 @@ Application::Application(QObject *parent) : QObject(parent) {
 
 Application::~Application() {
   m_sender->send(osc::MessageGenerator()("/box/quit", true));
-}
-
-void Application::handle__box_sensor(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 threshold_in;
-  args >> threshold_in;
-  setThreshold(threshold_in);
-}
-
-void Application::handle__box_tracksList(
-    osc::ReceivedMessageArgumentStream args) {
-  const char *listeT;
-  args >> listeT;
-  QStringList trackNames = QString::fromUtf8(listeT).split('|');
-  for (unsigned char i = 0; i < trackNames.size(); ++i) {
-    m_tracks[i]->setName(trackNames[i]);
-  }
-
-  m_enabledTrackCount = trackNames.size();
-  emit enabledTrackCountChanged();
-}
-
-void Application::handle__box_enableSync(
-    osc::ReceivedMessageArgumentStream args) {
-  // stop the timer that tries to find out if there are connection issues
-  emit connectionEstablished();
-
-  osc::int32 val;
-  args >> val;
-
-  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
-    // this creates an integer with only one bit enabled, which is the i-th one,
-    // e.g. for i == 4, this will make an int whose value is 0b00010000
-    const int mask = 1 << i;
-    // this is a binary comparison that checks if val has the bit in the mask
-    // set to true or false
-    m_tracks[i]->setActivated((mask & val) != 0);
-  }
-}
-
-void Application::handle__box_beat(osc::ReceivedMessageArgumentStream args) {
-  double beat;
-  args >> beat;
-
-  setBeat(beat);
-  // nextBeat((int)beat);
-}
-
-void Application::handle__box_title(osc::ReceivedMessageArgumentStream args) {
-  const char *title;
-  args >> title;
-  setCurrentSongTitle(QString::fromUtf8(title));
-}
-
-void Application::handle__box_songsList(
-    osc::ReceivedMessageArgumentStream args) {
-  const char *liste;
-  args >> liste;
-
-  setSongList(QString::fromUtf8(liste).split('|'));
-}
-
-void Application::handle__box_ready(osc::ReceivedMessageArgumentStream args) {
-  bool go;
-  args >> go;
-  ready(go);
-}
-
-void Application::handle__box_master(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 master;
-  args >> master;
-  setMasterVolume(master);
-}
-
-void Application::handle__box_volume(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 track;
-  osc::int32 vol;
-  args >> track >> vol;
-
-  if (track < m_tracks.size()) {
-    m_tracks[track]->setVolume(vol);
-  }
-}
-
-void Application::handle__box_pan(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 track;
-  osc::int32 pan;
-  args >> track >> pan;
-
-  if (track < m_tracks.size()) {
-    m_tracks[track]->setPan(pan);
-  }
-}
-
-void Application::handle__box_mute(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 muteStatus;
-  args >> muteStatus;
-
-  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
-    // this creates an integer with only one bit enabled, which is the i-th one,
-    // e.g. for i == 4, this will make an int whose value is 0b00010000
-    const int mask = 1 << i;
-    // this is a binary comparison that checks if val has the bit in the mask
-    // set to true or false
-    m_tracks[i]->setMuted((mask & muteStatus) != 0);
-  }
-}
-
-void Application::handle__box_solo(osc::ReceivedMessageArgumentStream args) {
-  osc::int32 soloStatus;
-  args >> soloStatus;
-
-  for (unsigned char i = 0; i < m_tracks.size(); ++i) {
-    // this creates an integer with only one bit enabled, which is the i-th one,
-    // e.g. for i == 4, this will make an int whose value is 0b00010000
-    const int mask = 1 << i;
-    // this is a binary comparison that checks if val has the bit in the mask
-    // set to true or false
-    m_tracks[i]->setSolo((mask & soloStatus) != 0);
-  }
-}
-
-void Application::handle__box_playing(osc::ReceivedMessageArgumentStream args) {
-  bool playing;
-  args >> playing;
-  setPlaying(playing);
-}
-
-void Application::handle__box_images(osc::ReceivedMessageArgumentStream args) {
-  const char *name;
-  osc::Blob b;
-  args >> name;
-  args >> b;
-
-  const QString imageName = QString::fromUtf8(name);
-
-  QBuffer dataBuffer;
-  dataBuffer.setData(static_cast<const char*>(b.data), b.size);
-  dataBuffer.open(QBuffer::ReadOnly);
-
-  QImage image;
-  image.load(&dataBuffer, "JPG");
-  if (image.isNull()) {
-    std::cerr << "Image is invalid :(" << std::endl;
-  }
-
-  InstrumentImageProvider::registerImage(imageName, image);
 }
 
 void Application::deleteSong(const QString &songName) {
