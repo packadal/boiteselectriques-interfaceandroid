@@ -19,31 +19,14 @@ include(deployment.pri)
 
 HEADERS += \
 	Application.h \
-	osc/oscmessagegenerator.h \
-	osc/oscreceiver.h \
-	osc/oscsender.h \
     track.h \
-    instrumentimageprovider.h
-
-#### Libraries ####
-  ##  Oscpack  ##
-
-OSCPACK = $$PWD/../deps/oscpack
+    instrumentimageprovider.h \
+    transmitter.hpp
 
 android-g++|android-clang {
-	unix:!macx: LIBS += -L$$OSCPACK -loscpack
-
-	INCLUDEPATH += $$OSCPACK
-	DEPENDPATH += $$OSCPACK
-
-	unix:!macx: PRE_TARGETDEPS += $$OSCPACK/liboscpack.a
-
-
 	ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
-
 	OTHER_FILES += \
 		android/AndroidManifest.xml
-		
 }
 
 OTHER_FILES += \

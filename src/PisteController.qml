@@ -120,8 +120,8 @@ Item {
 
         Image {
             id: loadingTester
-            visible: false
             source: "image://instruments/" + app.currentSongTitle + " - " + track.name
+            visible: false
         }
 
         anchors.horizontalCenter: mainButton.horizontalCenter
@@ -152,7 +152,7 @@ Item {
     //Volume Slider
     Slider {
         id: volumeSlider
-        anchors.top: soloButton.bottom
+        anchors.top: imageButton.bottom
         anchors.topMargin: 32
         anchors.bottom: panDial.top
         anchors.bottomMargin: 16

@@ -2,7 +2,9 @@
 #include <QObject>
 #include <QTimer>
 
-#include <osc/oscsender.h>
+#include <memory>
+
+#include "transmitter.hpp"
 
 class Track : public QObject {
   Q_OBJECT
@@ -16,11 +18,10 @@ class Track : public QObject {
   Q_PROPERTY(int pan READ pan WRITE setPan NOTIFY panChanged)
   Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
- public:
+public:
   Track();
-  explicit Track(unsigned char trackID,
-                 std::shared_ptr<OscSender> sender,
-                 QObject* parent = nullptr);
+  explicit Track(unsigned char trackID, std::shared_ptr<Transmitter> sender,
+                 QObject *parent = nullptr);
 
   bool activated() const { return m_activated; }
   bool enabled() const { return m_enabled; }
@@ -30,7 +31,7 @@ class Track : public QObject {
   int pan() const { return m_pan; }
   QString name() const { return m_name; }
 
- public slots:
+public slots:
 
   // these functions are the property setter
   void setActivated(bool activated);
@@ -39,7 +40,7 @@ class Track : public QObject {
   void setSolo(bool solo);
   void setVolume(int volume);
   void setPan(int pan);
-  void setName(const QString& name);
+  void setName(const QString &name);
 
   // these functions only send the data to the server
   void updateActivated(bool activated);
@@ -50,7 +51,7 @@ class Track : public QObject {
 
   void reset();
 
- signals:
+signals:
   void activatedChanged();
   void enabledChanged();
   void mutedChanged();
@@ -59,7 +60,7 @@ class Track : public QObject {
   void panChanged();
   void nameChanged();
 
- private:
+private:
   bool m_activated = false;
   bool m_enabled = true;
   bool m_muted = false;
@@ -69,7 +70,6 @@ class Track : public QObject {
   QString m_name = QString::null;
 
   unsigned char m_trackID = 255;
-
-  std::shared_ptr<OscSender> m_sender;
+  std::shared_ptr<Transmitter> m_transmitter;
   QTimer m_volumeTimer;
 };
