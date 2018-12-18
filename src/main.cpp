@@ -40,6 +40,8 @@ int main(int argc, char* argv[]) {
 
   engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
+  QObject::connect(&engine, &QQmlEngine::quit, &app, &QCoreApplication::quit);
+
 #ifdef __arm__
   keepScreenOn();
 #endif
