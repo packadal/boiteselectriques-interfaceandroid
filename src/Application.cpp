@@ -5,8 +5,7 @@
 #include <QImage>
 #include <cmath>
 
-Application::Application(QObject *parent) : QObject(parent) {
-
+Application::Application(QObject* parent) : QObject(parent) {
   m_volumeTimer.setInterval(30);
   m_volumeTimer.setSingleShot(true);
 
@@ -57,14 +56,15 @@ Application::Application(QObject *parent) : QObject(parent) {
       "/box/images",
       std::bind(&Application::handle__box_images, this, std::placeholders::_1));
 
-  setBeat(0);
-  connect(&m_connectionTest, &QTimer::timeout, [this]() {
-    qWarning() << "connection error";
-    m_connectionError = true;
+  connect(m_transmitter.get(), &Transmitter::isConnectedChanged, [this]() {
+    if (m_transmitter->isConnected()) {
+      sync();
+    }
     emit connectionErrorChanged();
   });
-  connect(this, &Application::connectionEstablished, this,
-          &Application::acceptConnection);
+
+  setBeat(0);
+
   checkConnection();
 }
 
@@ -74,13 +74,13 @@ Application::~Application() {
   m_transmitter = nullptr;
 }
 
-void Application::handle__box_sensor(QDataStream &args) {
+void Application::handle__box_sensor(QDataStream& args) {
   qint32 threshold_in;
   args >> threshold_in;
   setThreshold(threshold_in);
 }
 
-void Application::handle__box_tracksList(QDataStream &args) {
+void Application::handle__box_tracksList(QDataStream& args) {
   QStringList trackNames;
   args >> trackNames;
   for (unsigned char i = 0; i < trackNames.size(); ++i) {
@@ -91,8 +91,7 @@ void Application::handle__box_tracksList(QDataStream &args) {
   emit enabledTrackCountChanged();
 }
 
-void Application::handle__box_enableSync(QDataStream &args) {
-  // stop the timer that tries to find out if there are connection issues
+void Application::handle__box_enableSync(QDataStream& args) {
   emit connectionEstablished();
 
   qint32 val;
@@ -108,7 +107,7 @@ void Application::handle__box_enableSync(QDataStream &args) {
   }
 }
 
-void Application::handle__box_beat(QDataStream &args) {
+void Application::handle__box_beat(QDataStream& args) {
   double beat;
   args >> beat;
 
@@ -116,32 +115,32 @@ void Application::handle__box_beat(QDataStream &args) {
   // nextBeat((int)beat);
 }
 
-void Application::handle__box_title(QDataStream &args) {
+void Application::handle__box_title(QDataStream& args) {
   QString title;
   args >> title;
   setCurrentSongTitle(title);
 }
 
-void Application::handle__box_songsList(QDataStream &args) {
+void Application::handle__box_songsList(QDataStream& args) {
   QStringList liste;
   args >> liste;
 
   setSongList(liste);
 }
 
-void Application::handle__box_ready(QDataStream &args) {
+void Application::handle__box_ready(QDataStream& args) {
   bool go;
   args >> go;
   ready(go);
 }
 
-void Application::handle__box_master(QDataStream &args) {
+void Application::handle__box_master(QDataStream& args) {
   qint32 master;
   args >> master;
   setMasterVolume(master);
 }
 
-void Application::handle__box_volume(QDataStream &args) {
+void Application::handle__box_volume(QDataStream& args) {
   qint32 track;
   qint32 vol;
   args >> track >> vol;
@@ -151,7 +150,7 @@ void Application::handle__box_volume(QDataStream &args) {
   }
 }
 
-void Application::handle__box_pan(QDataStream &args) {
+void Application::handle__box_pan(QDataStream& args) {
   qint32 track;
   qint32 pan;
   args >> track >> pan;
@@ -161,7 +160,7 @@ void Application::handle__box_pan(QDataStream &args) {
   }
 }
 
-void Application::handle__box_mute(QDataStream &args) {
+void Application::handle__box_mute(QDataStream& args) {
   qint32 muteStatus;
   args >> muteStatus;
 
@@ -175,7 +174,7 @@ void Application::handle__box_mute(QDataStream &args) {
   }
 }
 
-void Application::handle__box_solo(QDataStream &args) {
+void Application::handle__box_solo(QDataStream& args) {
   qint32 soloStatus;
   args >> soloStatus;
 
@@ -189,13 +188,13 @@ void Application::handle__box_solo(QDataStream &args) {
   }
 }
 
-void Application::handle__box_playing(QDataStream &args) {
+void Application::handle__box_playing(QDataStream& args) {
   bool playing;
   args >> playing;
   setPlaying(playing);
 }
 
-void Application::handle__box_images(QDataStream &args) {
+void Application::handle__box_images(QDataStream& args) {
   QString imageName;
   args >> imageName;
 
@@ -216,11 +215,13 @@ void Application::handle__box_images(QDataStream &args) {
                                          image);
 }
 
-void Application::deleteSong(const QString &songName) {
+void Application::deleteSong(const QString& songName) {
   m_transmitter->send("/box/delete_song", songName);
 }
 
-QString Application::song() const { return m_song; }
+QString Application::song() const {
+  return m_song;
+}
 
 void Application::updateThreshold(int thresh) {
   if (thresh != threshold()) {
@@ -228,7 +229,9 @@ void Application::updateThreshold(int thresh) {
   }
 }
 
-void Application::play() { m_transmitter->send("/box/play", true); }
+void Application::play() {
+  m_transmitter->send("/box/play", true);
+}
 
 void Application::stop() {
   m_transmitter->send("/box/stop", true);
@@ -255,27 +258,28 @@ void Application::refreshSong() {
   m_transmitter->send("/box/refresh_song", true);
 }
 
-void Application::selectSong(const QString &song) {
+void Application::selectSong(const QString& song) {
   m_transmitter->send("/box/select_song", song);
 }
 
-void Application::reloadSong() { selectSong(m_song); }
+void Application::reloadSong() {
+  selectSong(m_song);
+}
 
-void Application::sync() { m_transmitter->send("/box/sync", true); }
+void Application::sync() {
+  m_transmitter->send("/box/sync", true);
+}
 
 void Application::checkConnection() {
-  sync();
-  m_connectionTest.setSingleShot(true);
-  m_connectionTest.start(500);
+  m_transmitter->connectToServer();
+  if (m_transmitter->isConnected()) {
+    sync();
+  }
 }
 
-void Application::acceptConnection() {
-  m_connectionTest.stop();
-  m_connectionError = false;
-  emit connectionErrorChanged();
+void Application::ready(bool go) {
+  emit updateReady(go);
 }
-
-void Application::ready(bool go) { emit updateReady(go); }
 
 QQmlListProperty<Track> Application::tracks() {
   return QQmlListProperty<Track>(this, m_tracks);

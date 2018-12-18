@@ -32,7 +32,7 @@ ApplicationWindow {
                     target: drawerMenu
                     interactive: false
                     position: 1
-                    visible: true
+                    visible: !app.connectionError
                 }
                 PropertyChanges {
                     target: mixing_panel

@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QDataStream>
 #include <QObject>
+#include <QSharedPointer>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QThread>
@@ -12,19 +13,26 @@
 class Transmitter : public QObject {
   Q_OBJECT
 
-public:
-  Transmitter(const QString &hostName, quint16 receivePort = 9988,
+  Q_PROPERTY(bool isConnected READ isConnected NOTIFY isConnectedChanged)
+ public:
+  bool isConnected() const {
+    return m_socket.state() == QAbstractSocket::ConnectedState;
+  }
+
+  Transmitter(const QString& hostName,
+              quint16 receivePort = 9988,
               quint16 sendPort = 9989)
       : m_hostname(hostName), m_receivePort(receivePort), m_sendPort(sendPort) {
     m_socket.setSocketOption(QAbstractSocket::LowDelayOption, 1);
     m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, 1);
+    m_connectionTimer.setSingleShot(true);
+    connect(&m_socket, &QAbstractSocket::connected,
+            [this]() { emit isConnectedChanged(); });
+
     connect(
         &m_socket,
         QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
         [this]() { qWarning() << m_socket.errorString(); });
-    //    connect(&m_socket, &QAbstractSocket::connected, []() {
-    //      qWarning() << "client connected";
-    //    });
 
     m_inputData.setDevice(&m_socket);
     m_inputData.setVersion(QDataStream::Qt_5_0);
@@ -63,18 +71,16 @@ public:
     if (!m_server.listen(QHostAddress::Any, m_receivePort)) {
       qWarning() << "could not start server";
     }
-
-    connect(&m_connectionTimer, &QTimer::timeout, [this]() {
-      if (m_socket.state() == QAbstractSocket::ConnectedState) {
-        m_connectionTimer.stop();
-        return;
-      }
-      m_socket.connectToHost(m_hostname, m_sendPort);
-    });
-    m_connectionTimer.start(100);
   }
 
-  template <typename... Args> void send(QString eventName, Args... args) {
+  void connectToServer() {
+    if (m_socket.state() == QAbstractSocket::UnconnectedState) {
+      m_socket.connectToHost(m_hostname, m_sendPort);
+    }
+  }
+
+  template <typename... Args>
+  void send(QString eventName, Args... args) {
     QByteArray dataBuffer;
     QDataStream stream(&dataBuffer, QIODevice::WriteOnly);
     stream.setVersion(QDataStream::Qt_5_0);
@@ -83,21 +89,24 @@ public:
     internalSend(dataBuffer);
   }
 
-  void registerEventHandler(const QString &eventName,
-                            std::function<void(QDataStream &)> handler) {
+  void registerEventHandler(const QString& eventName,
+                            std::function<void(QDataStream&)> handler) {
     m_handlers[eventName] = handler;
   }
+ signals:
+  void isConnectedChanged();
 
-private:
-  template <typename T> void packData(QDataStream &data, T first) {
+ private:
+  template <typename T>
+  void packData(QDataStream& data, T first) {
     data << first;
   }
   template <typename T, typename... Args>
-  void packData(QDataStream &data, T first, Args... args) {
+  void packData(QDataStream& data, T first, Args... args) {
     data << first;
     packData(data, args...);
   }
-  void internalSend(const QByteArray &data) {
+  void internalSend(const QByteArray& data) {
     while (m_serverConnection == nullptr) {
       QThread::msleep(100);
       QCoreApplication::processEvents(QEventLoop::AllEvents);
@@ -125,18 +134,18 @@ private:
     }
   }
 
-private:
+ private:
   QString m_hostname;
   quint16 m_receivePort;
   quint16 m_sendPort;
 
   QTcpServer m_server;
-  QTcpSocket *m_serverConnection = nullptr;
+  QTcpSocket* m_serverConnection = nullptr;
   QTcpSocket m_socket;
   QDataStream m_inputData;
-  QMap<QString, std::function<void(QDataStream &)>> m_handlers;
+  QMap<QString, std::function<void(QDataStream&)>> m_handlers;
 
   QTimer m_connectionTimer;
 };
 
-#endif // TRANSMITTER_HPP
+#endif  // TRANSMITTER_HPP
