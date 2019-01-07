@@ -301,7 +301,7 @@ class Application : public QObject {
   }
 
   void setBeat(double beat) {
-    if (qFuzzyCompare(beat, m_currentBeat)) {
+    if (!qFuzzyCompare(beat, m_currentBeat)) {
       m_currentBeat = beat;
       emit beatChanged();
     }
