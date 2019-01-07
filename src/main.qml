@@ -342,27 +342,17 @@ ApplicationWindow {
                 text: "Sensibilite du capteur: " + Math.ceil(thresholdItem.value) + "%"
                 font.pointSize: 18
             }
-            RowLayout {
+
+            Slider {
+                id: thresholdItem
+
                 Layout.fillWidth: true
-                height: thresholdItem.implicitHeight
-                Label {
-                    text: "0%"
-                }
 
-                Slider {
-                    id: thresholdItem
-
-                    Layout.fillWidth: true
-
-                    from: 0
-                    to: 100
-                    orientation: Qt.Horizontal
-                    value: app.threshold
-                    onValueChanged: app.updateThreshold(value)
-                }
-                Label {
-                    text: "100%"
-                }
+                from: 0
+                to: 100
+                orientation: Qt.Horizontal
+                value: app.threshold
+                onValueChanged: app.updateThreshold(value)
             }
 
             // TODO this is a WIP separator

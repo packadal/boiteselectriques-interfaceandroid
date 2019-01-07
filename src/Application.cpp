@@ -225,7 +225,8 @@ QString Application::song() const {
 
 void Application::updateThreshold(int thresh) {
   if (thresh != threshold()) {
-    m_transmitter->send("/box/update_threshold", thresh);
+    // convert from sensitivity (as shown by the UI), to threshold
+    m_transmitter->send("/box/update_threshold", 100 - thresh);
   }
 }
 
