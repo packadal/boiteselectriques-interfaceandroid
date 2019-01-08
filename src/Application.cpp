@@ -77,7 +77,7 @@ Application::~Application() {
 void Application::handle__box_sensor(QDataStream& args) {
   qint32 threshold_in;
   args >> threshold_in;
-  setThreshold(threshold_in);
+  setThreshold(100 - threshold_in);
 }
 
 void Application::handle__box_tracksList(QDataStream& args) {
